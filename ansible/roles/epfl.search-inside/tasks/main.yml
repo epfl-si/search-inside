@@ -1,0 +1,250 @@
+- name: Search inside elastic Image Stream
+  openshift:
+    state: latest
+    apiVersion: v1
+    kind: ImageStream
+    metadata:
+      name: search-inside-elastic
+      namespace: "wwp-test"
+      labels:
+        build: search-inside-elastic
+    spec:
+      lookupPolicy:
+        local: false
+      tags:
+        - annotations: null
+          from:
+            kind: DockerImage
+            name: 'search-inside-elastic:latest'
+          generation: 3
+          importPolicy: {}
+          name: latest
+          referencePolicy:
+            type: Source
+
+- name: Search inside elastic Build Config
+  openshift:
+    state: latest
+    apiVersion: v1
+    kind: BuildConfig
+    metadata:
+      name: search-inside-elastic
+      namespace: "wwp-test"
+      labels:
+        build: search-inside-elastic
+    spec:
+      output:
+        to:
+          kind: ImageStreamTag
+          name: 'search-inside-elastic:latest'
+      runPolicy: Serial
+      source:
+        git:
+          uri: "https://github.com/strikerpt/projet_inside_epfl"
+        contextDir: "docker"
+      strategy:
+        dockerStrategy:
+          forcePull: true
+          noCache: true
+        type: Docker
+  register: _openshift_image_search_inside_elastic
+
+- name: "Rebuild search inside elastic image now"
+  when: _openshift_image_search_inside_elastic is changed
+  shell: "oc -n wwp-test start-build --wait search-inside-elastic"
+  delegate_to: localhost
+
+- name: Search inside kibana Image Stream
+  openshift:
+    state: latest
+    apiVersion: v1
+    kind: ImageStream
+    metadata:
+      name: search-inside-kibana
+      namespace: "wwp-test"
+      labels:
+        build: search-inside-kibana
+    spec:
+      lookupPolicy:
+        local: false
+      tags:
+        - annotations: null
+          from:
+            kind: DockerImage
+            name: 'search-inside-kibana:latest'
+          generation: 3
+          importPolicy: {}
+          name: latest
+          referencePolicy:
+            type: Source
+
+- name: Search inside Kibana Build Config
+  openshift:
+    state: latest
+    apiVersion: v1
+    kind: BuildConfig
+    metadata:
+      name: search-inside-kibana
+      namespace: "wwp-test"
+      labels:
+        build: search-inside
+    spec:
+      output:
+        to:
+          kind: ImageStreamTag
+          name: 'search-inside-kibana:latest'
+      source:
+        dockerfile: |
+          FROM docker.elastic.co/kibana/kibana:7.11.0
+      strategy:
+        dockerStrategy:
+          forcePull: true
+          noCache: true
+  register: _openshift_image_search_inside_kibana
+
+- name: "Rebuild search inside kibana image now"
+  when: _openshift_image_search_inside_kibana is changed
+  shell: "oc -n wwp-test start-build --wait search-inside-kibana"
+  delegate_to: localhost
+
+- name: search-inside-elastic Deployment Config
+  openshift:
+    apiVersion: apps.openshift.io/v1
+    kind: DeploymentConfig
+    metadata:
+      name: search-inside-elastic
+      namespace: "wwp-test"
+    spec:
+      replicas: 1
+      selector:
+        deployment-config.name: search-inside-elastic
+      strategy:
+        activeDeadlineSeconds: 21600
+        resources: { }
+        rollingParams:
+          intervalSeconds: 1
+          maxSurge: 25%
+          maxUnavailable: 25%
+          timeoutSeconds: 600
+          updatePeriodSeconds: 1
+        type: Rolling
+      template:
+        metadata:
+          creationTimestamp: null
+          labels:
+            deployment-config.name: search-inside-elastic
+        spec:
+          containers:
+            - env:
+              - name: 'ES_JAVA_OPTS'
+                value: '-Xms4096m -Xmx4096m'
+              - name: 'discovery.type'
+                value: 'single-node'
+              image: 'docker-registry.default.svc:5000/wwp-test/search-inside-elastic:latest'
+              imagePullPolicy: Always
+              name: search-inside-elastic
+              resources: {}
+              terminationMessagePath: /dev/termination-log
+              terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: { }
+        terminationGracePeriodSeconds: 30
+      triggers:
+      - type: ImageChange
+        imageChangeParams:
+          automatic: true
+          containerNames:
+          - search-inside-elastic
+          from:
+            kind: ImageStreamTag
+            name: 'search-inside-elastic:latest'
+            namespace: "wwp-test"
+
+- name: search-inside-elastic Service
+  openshift:
+    state: latest
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: "{{ searchinside_elastic_servicename }}"
+      namespace: "wwp-test"
+    spec:
+      type: ClusterIP
+      ports:
+        - port: "{{ searchinside_elastic_port }}"
+          protocol: TCP
+          targetPort: "{{ searchinside_elastic_port }}"
+      selector:
+        deployment-config.name: search-inside-elastic
+
+- name: search-inside-kibana Deployment Config
+  openshift:
+    apiVersion: apps.openshift.io/v1
+    kind: DeploymentConfig
+    metadata:
+      name: search-inside-kibana
+      namespace: "wwp-test"
+    spec:
+      replicas: 1
+      selector:
+        deployment-config.name: search-inside-kibana
+      strategy:
+        activeDeadlineSeconds: 21600
+        resources: { }
+        rollingParams:
+          intervalSeconds: 1
+          maxSurge: 25%
+          maxUnavailable: 25%
+          timeoutSeconds: 600
+          updatePeriodSeconds: 1
+        type: Rolling
+      template:
+        metadata:
+          creationTimestamp: null
+          labels:
+            deployment-config.name: search-inside-kibana
+        spec:
+          containers:
+            - env:
+              - name: 'ELASTICSEARCH_URL'
+                value: 'http://search-inside-elastic:9200'
+              - name: 'ELASTICSEARCH_HOSTS'
+                value: '["http://search-inside-elastic:9200"]'
+              image: 'docker-registry.default.svc:5000/wwp-test/search-inside-kibana:latest'
+              imagePullPolicy: Always
+              name: search-inside-kibana
+              resources: {}
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: { }
+        terminationGracePeriodSeconds: 30
+      triggers:
+      - type: ImageChange
+        imageChangeParams:
+          automatic: true
+          containerNames:
+          - search-inside-kibana
+          from:
+            kind: ImageStreamTag
+            name: 'search-inside-kibana:latest'
+            namespace: "wwp-test"
+
+- name: search-inside-kibana Service
+  openshift:
+    state: latest
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: "{{ searchinside_kibana_servicename }}"
+      namespace: "wwp-test"
+    spec:
+      type: ClusterIP
+      ports:
+        - port: "{{ searchinside_kibana_port }}"
+          protocol: TCP
+          targetPort: "{{ searchinside_kibana_port }}"
+      selector:
+        deployment-config.name: search-inside-kibana

@@ -1,0 +1,7 @@
+---
+# vars file for epfl.infoscience-exports
+searchinside_elastic_port: 9200
+searchinside_kibana_port: 5601
+searchinside_elastic_servicename: "search-inside-elastic"
+searchinside_kibana_servicename: "search-inside-kibana"
+
