@@ -1,4 +1,6 @@
 ansible-tmp
+ansible/elasticsible_m1_bigsur
+ansible/install.sh
 
 # Logs
 logs
