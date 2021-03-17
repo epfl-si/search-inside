@@ -1,12 +1,15 @@
 const axios = require("axios");
 const html_entities = require("html-entities");
 const request = require("request").defaults({ encoding: null });
+const os = require('os');
 
-var os = require('os');
 
-var networkInterfaces = os.networkInterfaces();
+const network = async () => {
+    var networkInterfaces = os.networkInterfaces();
 
-console.log(networkInterfaces);
+    console.log(networkInterfaces);
+};
+
 
 //Read url and write the content of pages in elasticsearch
 const getPages = async () => {
@@ -206,6 +209,7 @@ const get_data_from_medias = async () => {
 
 const launch_script = async () => {
   console.log("launch_script");
+  await network()
   await delete_inside_temp();
   await create_inside_temp();
   await create_attachment_field();
