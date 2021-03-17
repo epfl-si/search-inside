@@ -1,13 +1,12 @@
-GET new_inside/_search
+//Get all content of inside
+GET inside/_search
 {
   "query": {
     "match_all": {}
   }
 }
 
-GET inside_temp2/
-GET inside/
-
+//Get in inside the indexes that contains saturn7
 GET inside/_search
 {
    "_source": ["title", "description", "url", "attachment.content", "attachment.content_type", "attachment.author", "attachment.title"],
@@ -19,14 +18,8 @@ GET inside/_search
   }
 }
 
-POST /inside/_doc
-{
-  "url": "test",
-            "title": "test_title",
-            "description": "test_description",
-            "rights": "test"
-}
 
+//Structure of inside
 POST /inside/_doc/
 {
   "mappings" : 
@@ -63,18 +56,12 @@ POST /inside/_doc/
   }
 }
 
+//Delete structure and indexes of inside
 DELETE inside
 
 
-PUT /my_source_index/_settings
-{
-  "settings": {
-    "index.blocks.write": true
-  }
-}
 
-POST /my-index-000001/_clone/cloned-my-index-000001
-
+//Put a field that contains attachments
 PUT _ingest/pipeline/attachment
 {
   "description" : "Extract attachment information",
@@ -87,6 +74,8 @@ PUT _ingest/pipeline/attachment
   ]
 }
 
+
+//Copy the indexes the inside_temp into inside
 POST _reindex
 {
   "source": {
