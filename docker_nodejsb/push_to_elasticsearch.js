@@ -177,7 +177,7 @@ const copy_inside_temp_to_inside = async () => {
 const get_data_from_pages = async () => {
   console.log("get_data_from_pages");
   let pages = await getPages();
-  
+
   // loop over each entries to display title
   for (let page of pages.data) {
     let link_page = page.link;
@@ -212,7 +212,7 @@ const get_data_from_medias = async () => {
   }
 };
 
-const launch_script = async () => {
+//const launch_script = async () => {
   console.log("launch_script");
   await delete_inside_temp();
   await create_inside_temp();
@@ -221,6 +221,6 @@ const launch_script = async () => {
   await get_data_from_medias();
   await delete_inside();
   await copy_inside_temp_to_inside();
-};
+//};
 
-launch_script();
+//launch_script();
