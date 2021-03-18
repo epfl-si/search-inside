@@ -1,15 +1,6 @@
 const axios = require("axios");
 const html_entities = require("html-entities");
 const request = require("request").defaults({ encoding: null });
-/* const os = require('os');
-
-
-const network = async () => {
-    var networkInterfaces = os.networkInterfaces();
-
-    console.log(networkInterfaces);
-};
- */
 
 //Read url and write the content of pages in elasticsearch
 const getPages = async () => {
@@ -43,13 +34,20 @@ const convert_files_to_base64 = async (file_name, source_media) => {
 
   //Convert file from url to base64
   request.get(`${source_media}`, async function (error, response, body) {
-    console.log(source_media);
     data = Buffer.from(body).toString("base64");
-    await write_data_medias(file_name, data, source_media);
+    return axios({
+      method: "POST",
+      url: `https://searchinside-elastic.epfl.ch/inside_temp/_doc?pipeline=attachment`,
+      data: {
+        url: `${source_media}`,
+        rights: `test`,
+        data: `${data}`,
+      },
+    });
   });
 };
 
-//Write data into elasticsearch
+/* //Write data into elasticsearch
 const write_data_medias = async (file_name, data, source_media) => {
   console.log("write_data_medias");
   //Write the data into elasticsearch
@@ -62,7 +60,7 @@ const write_data_medias = async (file_name, data, source_media) => {
       data: `${data}`,
     },
   });
-};
+}; */
 
 const write_data_pages = async (link_page, title_page, StripHTMLBreakLines) => {
   console.log("write_data_pages");
@@ -209,7 +207,6 @@ const get_data_from_medias = async () => {
 
 const launch_script = async () => {
   console.log("launch_script");
-  //await network()
   await delete_inside_temp();
   await create_inside_temp();
   await create_attachment_field();
