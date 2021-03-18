@@ -209,7 +209,7 @@ const get_data_from_medias = async () => {
 
 const launch_script = async () => {
   console.log("launch_script");
-  //await network()
+  await network()
   await delete_inside_temp();
   await create_inside_temp();
   await create_attachment_field();
