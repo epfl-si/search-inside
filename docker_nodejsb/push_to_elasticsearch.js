@@ -84,7 +84,7 @@ const delete_inside_temp = async () => {
   console.log("delete_inside_temp");
   return axios({
     method: "DELETE",
-    url: `https://searchinside-elastic.epfl.ch/isnide_temp`,
+    url: `https://searchinside-elastic.epfl.ch/inside_temp`,
   });
 };
 
