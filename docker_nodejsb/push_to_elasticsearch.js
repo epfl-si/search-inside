@@ -35,6 +35,7 @@ const convert_files_to_base64 = async (file_name, source_media) => {
   //Convert file from url to base64
   request.get(`${source_media}`, async function (error, response, body) {
     data = Buffer.from(body).toString("base64");
+    console.log(`POST http://search-inside-elastic.wwp-test.svc:9200/inside_temp/_doc?pipeline=attachment | ${source_media}` )
     return axios({
       method: "POST",
       url: `http://search-inside-elastic.wwp-test.svc:9200/inside_temp/_doc?pipeline=attachment`,
@@ -64,6 +65,7 @@ const write_data_medias = async (file_name, data, source_media) => {
 
 const write_data_pages = async (link_page, title_page, StripHTMLBreakLines) => {
   console.log("write_data_pages");
+  console.log("POST http://search-inside-elastic.wwp-test.svc:9200/inside_temp/_doc")
   //Write the data into elasticsearch
   return axios({
     method: "POST",
@@ -80,6 +82,7 @@ const write_data_pages = async (link_page, title_page, StripHTMLBreakLines) => {
 //Delete inside temp
 const delete_inside_temp = async () => {
   console.log("delete_inside_temp");
+  console.log("DELETE http://search-inside-elastic.wwp-test.svc:9200/inside_temp")
   return axios({
     method: "DELETE",
     url: `http://search-inside-elastic.wwp-test.svc:9200/inside_temp`,
@@ -89,6 +92,7 @@ const delete_inside_temp = async () => {
 //Delete inside temp
 const delete_inside = async () => {
   console.log("delete_inside");
+  console.log("DELETE http://search-inside-elastic.wwp-test.svc:9200/inside")
   return axios({
     method: "DELETE",
     url: `http://search-inside-elastic.wwp-test.svc:9200/inside`,
@@ -98,6 +102,7 @@ const delete_inside = async () => {
 //Create inside temp
 const create_inside_temp = async () => {
   console.log("create_inside_temp");
+  console.log(`POST http://search-inside-elastic.wwp-test.svc:9200/inside_temp/_doc/` )
   return axios({
     method: "POST",
     url: `http://search-inside-elastic.wwp-test.svc:9200/inside_temp/_doc/`,
@@ -132,6 +137,7 @@ const create_inside_temp = async () => {
 //Create attachment field
 const create_attachment_field = async () => {
   console.log("create_attachement_field");
+  console.log("PUT http://search-inside-elastic.wwp-test.svc:9200/_ingest/pipeline/attachment")
   return axios({
     method: "PUT",
     url: `http://search-inside-elastic.wwp-test.svc:9200/_ingest/pipeline/attachment`,
@@ -150,28 +156,28 @@ const create_attachment_field = async () => {
 
 //Copy inside temp into inside
 const copy_inside_temp_to_inside = async () => {
-  console.log("copy_inside_temp_to_inside");
-
-  //Put the inside_temp into inside
-  return axios({
-    method: "POST",
-    url: `http://search-inside-elastic.wwp-test.svc:9200/_reindex`,
-    data: {
-      source: {
-        index: "inside_temp",
-      },
-      dest: {
-        index: "inside",
-      },
-    },
-  });
+    console.log("copy_inside_temp_to_inside");
+    console.log("POST http://search-inside-elastic.wwp-test.svc:9200/_reindex")
+    //Put the inside_temp into inside
+    return axios({
+        method: "POST",
+        url: `http://search-inside-elastic.wwp-test.svc:9200/_reindex`,
+        data: {
+        source: {
+            index: "inside_temp",
+        },
+        dest: {
+            index: "inside",
+        },
+        },
+    });
 };
 
 //Get data from pages and medias
 const get_data_from_pages = async () => {
   console.log("get_data_from_pages");
   let pages = await getPages();
-
+  
   // loop over each entries to display title
   for (let page of pages.data) {
     let link_page = page.link;
@@ -198,6 +204,7 @@ const get_data_from_medias = async () => {
 
     if (source_media.match(/\.[^.]*$/g) == ".pdf") {
       let file_name = source_media.match(/(?<=\/)[^/]*$/g);
+      console.log(`${file_name}`)
       await convert_files_to_base64(file_name, source_media);
     } else {
       console.log("file is not a pdf :" + `${source_media}`);
