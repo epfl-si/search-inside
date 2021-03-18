@@ -37,7 +37,7 @@ const convert_files_to_base64 = async (file_name, source_media) => {
     data = Buffer.from(body).toString("base64");
     return axios({
       method: "POST",
-      url: `https://searchinside-elastic.epfl.ch/inside_temp/_doc?pipeline=attachment`,
+      url: `http://search-inside-elastic.wwp-test.svc:9200/inside_temp/_doc?pipeline=attachment`,
       data: {
         url: `${source_media}`,
         rights: `test`,
@@ -67,7 +67,7 @@ const write_data_pages = async (link_page, title_page, StripHTMLBreakLines) => {
   //Write the data into elasticsearch
   return axios({
     method: "POST",
-    url: `https://searchinside-elastic.epfl.ch/inside_temp/_doc`,
+    url: `http://search-inside-elastic.wwp-test.svc:9200/inside_temp/_doc`,
     data: {
       url: `${link_page}`,
       title: `${title_page}`,
@@ -82,7 +82,7 @@ const delete_inside_temp = async () => {
   console.log("delete_inside_temp");
   return axios({
     method: "DELETE",
-    url: `https://searchinside-elastic.epfl.ch/inside_temp`,
+    url: `http://search-inside-elastic.wwp-test.svc:9200/inside_temp`,
   });
 };
 
@@ -91,7 +91,7 @@ const delete_inside = async () => {
   console.log("delete_inside");
   return axios({
     method: "DELETE",
-    url: `https://searchinside-elastic.epfl.ch/inside`,
+    url: `http://search-inside-elastic.wwp-test.svc:9200/inside`,
   });
 };
 
@@ -100,7 +100,7 @@ const create_inside_temp = async () => {
   console.log("create_inside_temp");
   return axios({
     method: "POST",
-    url: `https://searchinside-elastic.epfl.ch/inside_temp/_doc/`,
+    url: `http://search-inside-elastic.wwp-test.svc:9200/inside_temp/_doc/`,
     data: {
       mappings: {
         properties: {
@@ -134,7 +134,7 @@ const create_attachment_field = async () => {
   console.log("create_attachement_field");
   return axios({
     method: "PUT",
-    url: `https://searchinside-elastic.epfl.ch/_ingest/pipeline/attachment`,
+    url: `http://search-inside-elastic.wwp-test.svc:9200/_ingest/pipeline/attachment`,
     data: {
       description: "Extract attachment information",
       processors: [
@@ -155,7 +155,7 @@ const copy_inside_temp_to_inside = async () => {
   //Put the inside_temp into inside
   return axios({
     method: "POST",
-    url: `https://searchinside-elastic.epfl.ch/_reindex`,
+    url: `http://search-inside-elastic.wwp-test.svc:9200/_reindex`,
     data: {
       source: {
         index: "inside_temp",
