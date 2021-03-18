@@ -136,7 +136,7 @@ const create_attachment_field = async () => {
   console.log("create_attachement_field");
   return axios({
     method: "PUT",
-    url: `https://searchinside-elastic.epfl.ch/inside_temp/_ingest/pipeline/attachment`,
+    url: `https://searchinside-elastic.epfl.ch/_ingest/pipeline/attachment`,
     data: {
       description: "Extract attachment information",
       processors: [
