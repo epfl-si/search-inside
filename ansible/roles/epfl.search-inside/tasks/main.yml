@@ -40,8 +40,8 @@
       runPolicy: Serial
       source:
         git:
-          uri: "https://github.com/strikerpt/projet_inside_epfl"
-        contextDir: "docker"
+          uri: "https://github.com/epfl-si/search_inside"
+        contextDir: "docker_elasticsearch"
       strategy:
         dockerStrategy:
           forcePull: true
@@ -209,9 +209,9 @@
           containers:
             - env:
               - name: 'ELASTICSEARCH_URL'
-                value: 'http://search-inside-elastic:9200'
+                value: 'http://search-inside-elastic.wwp-test.svc:9200'
               - name: 'ELASTICSEARCH_HOSTS'
-                value: '["http://search-inside-elastic:9200"]'
+                value: '["http://search-inside-elastic.wwp-test.svc:9200"]'
               image: 'docker-registry.default.svc:5000/wwp-test/search-inside-kibana:latest'
               imagePullPolicy: Always
               name: search-inside-kibana
@@ -248,3 +248,246 @@
           targetPort: "{{ searchinside_kibana_port }}"
       selector:
         deployment-config.name: search-inside-kibana
+
+- name: Search inside nodejs_backend Image Stream
+  openshift:
+    state: latest
+    apiVersion: v1
+    kind: ImageStream
+    metadata:
+      name: search-inside-nodejsb
+      namespace: "wwp-test"
+      labels:
+        build: search-inside-nodejsb
+    spec:
+      lookupPolicy:
+        local: false
+      tags:
+        - annotations: null
+          from:
+            kind: DockerImage
+            name: 'search-inside-nodejsb:latest'
+          generation: 3
+          importPolicy: {}
+          name: latest
+          referencePolicy:
+            type: Source
+
+- name: Search inside nodejs_backend Build Config
+  openshift:
+    state: latest
+    apiVersion: v1
+    kind: BuildConfig
+    metadata:
+      name: search-inside-nodejsb
+      namespace: "wwp-test"
+      labels:
+        build: search-inside-nodejsb
+    spec:
+      output:
+        to:
+          kind: ImageStreamTag
+          name: 'search-inside-nodejsb:latest'
+      runPolicy: Serial
+      source:
+        git:
+          uri: "https://github.com/epfl-si/search_inside"
+        contextDir: "docker_nodejsb"
+      strategy:
+        dockerStrategy:
+          forcePull: true
+          noCache: true
+        type: Docker
+  register: _openshift_image_search_inside_nodejsb
+ 
+- name: search-inside-nodejsb Deployment Config
+  openshift:
+    apiVersion: apps.openshift.io/v1
+    kind: DeploymentConfig
+    metadata:
+      name: search-inside-nodejsb
+      namespace: "wwp-test"
+    spec:
+      replicas: 1
+      selector:
+        deployment-config.name: search-inside-nodejsb
+      strategy:
+        activeDeadlineSeconds: 21600
+        resources: { }
+        rollingParams:
+          intervalSeconds: 1
+          maxSurge: 25%
+          maxUnavailable: 25%
+          timeoutSeconds: 600
+          updatePeriodSeconds: 1
+        type: Rolling
+      template:
+        metadata:
+          creationTimestamp: null
+          labels:
+            deployment-config.name: search-inside-nodejsb
+        spec:
+          containers:
+            - env:
+              - name: 'ELASTICSEARCH_URL'
+                value: 'http://search-inside-elastic.wwp-test.svc:9200'
+              - name: 'ELASTICSEARCH_HOSTS'
+                value: '["http://search-inside-elastic.wwp-test.svc:9200"]'
+              image: 'docker-registry.default.svc:5000/wwp-test/search-inside-nodejsb:latest'
+              imagePullPolicy: Always
+              name: search-inside-nodejsb
+              resources: {}
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: { }
+        terminationGracePeriodSeconds: 30
+      triggers:
+      - type: ImageChange
+        imageChangeParams:
+          automatic: true
+          containerNames:
+          - search-inside-nodejsb
+          from:
+            kind: ImageStreamTag
+            name: 'search-inside-nodejsb:latest'
+            namespace: "wwp-test"
+
+- name: search-nodejs-backend Service
+  openshift:
+    state: latest
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: "{{ searchinside_nodejsb_servicename }}"
+      namespace: "wwp-test"
+    spec:
+      type: ClusterIP
+      ports:
+        - port: "{{ searchinside_nodejsb_port }}"
+          protocol: TCP
+          targetPort: "{{ searchinside_nodejsb_port }}"
+      selector:
+        deployment-config.name: search-inside-nodejsb
+
+- name: Search inside nodejs_frontend Image Stream
+  openshift:
+    state: latest
+    apiVersion: v1
+    kind: ImageStream
+    metadata:
+      name: search-inside-nodejsf
+      namespace: "wwp-test"
+      labels:
+        build: search-inside-nodejsf
+    spec:
+      lookupPolicy:
+        local: false
+      tags:
+        - annotations: null
+          from:
+            kind: DockerImage
+            name: 'search-inside-nodejsf:latest'
+          generation: 3
+          importPolicy: {}
+          name: latest
+          referencePolicy:
+            type: Source
+
+- name: Search inside nodejs_frontend Build Config
+  openshift:
+    state: latest
+    apiVersion: v1
+    kind: BuildConfig
+    metadata:
+      name: search-inside-nodejsf
+      namespace: "wwp-test"
+      labels:
+        build: search-inside-nodejsf
+    spec:
+      output:
+        to:
+          kind: ImageStreamTag
+          name: 'search-inside-nodejsf:latest'
+      runPolicy: Serial
+      source:
+        git:
+          uri: "https://github.com/epfl-si/search_inside"
+        contextDir: "docker_nodejsf"
+      strategy:
+        dockerStrategy:
+          forcePull: true
+          noCache: true
+        type: Docker
+  register: _openshift_image_search_inside_nodejsf
+
+- name: search-inside-nodejsf Deployment Config
+  openshift:
+    apiVersion: apps.openshift.io/v1
+    kind: DeploymentConfig
+    metadata:
+      name: search-inside-nodejsf
+      namespace: "wwp-test"
+    spec:
+      replicas: 1
+      selector:
+        deployment-config.name: search-inside-nodejsf
+      strategy:
+        activeDeadlineSeconds: 21600
+        resources: { }
+        rollingParams:
+          intervalSeconds: 1
+          maxSurge: 25%
+          maxUnavailable: 25%
+          timeoutSeconds: 600
+          updatePeriodSeconds: 1
+        type: Rolling
+      template:
+        metadata:
+          creationTimestamp: null
+          labels:
+            deployment-config.name: search-inside-nodejsf
+        spec:
+          containers:
+            - env:
+              - name: 'ELASTICSEARCH_URL'
+                value: 'http://search-inside-elastic.wwp-test.svc:9200'
+              - name: 'ELASTICSEARCH_HOSTS'
+                value: '["http://search-inside-elastic.wwp-test.svc:9200"]'
+              image: 'docker-registry.default.svc:5000/wwp-test/search-inside-nodejsf:latest'
+              imagePullPolicy: Always
+              name: search-inside-nodejsf
+              resources: {}
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: { }
+        terminationGracePeriodSeconds: 30
+      triggers:
+      - type: ImageChange
+        imageChangeParams:
+          automatic: true
+          containerNames:
+          - search-inside-nodejsf
+          from:
+            kind: ImageStreamTag
+            name: 'search-inside-nodejsf:latest'
+            namespace: "wwp-test"
+
+- name: search-nodejs-frontend Service
+  openshift:
+    state: latest
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: "{{ searchinside_nodejsf_servicename }}"
+      namespace: "wwp-test"
+    spec:
+      type: ClusterIP
+      ports:
+        - port: "{{ searchinside_nodejsf_port }}"
+          protocol: TCP
+          targetPort: "{{ searchinside_nodejsf_port }}"
+      selector:
+        deployment-config.name: search-inside-nodejsf
+
