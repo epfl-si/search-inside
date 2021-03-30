@@ -40,8 +40,7 @@ const hbs = exphbs.create({
         },
     },
 })
-var viewPath = path.join(__dirname, 'app/views');
-
+var viewPath = path.join(__dirname, 'views');
 app.set('views', viewPath);
 app.engine('handlebars', hbs.engine)
 app.set('view engine', 'handlebars')
