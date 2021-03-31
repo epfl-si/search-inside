@@ -5,7 +5,7 @@
     kind: ImageStream
     metadata:
       name: search-inside-elastic
-      namespace: "wwp-test"
+      namespace: "{{openshift_namespace}}"
       labels:
         build: search-inside-elastic
     spec:
@@ -29,7 +29,7 @@
     kind: BuildConfig
     metadata:
       name: search-inside-elastic
-      namespace: "wwp-test"
+      namespace: "{{openshift_namespace}}"
       labels:
         build: search-inside-elastic
     spec:
@@ -51,7 +51,7 @@
 
 - name: "Rebuild search inside elastic image now"
   when: _openshift_image_search_inside_elastic is changed
-  shell: "oc -n wwp-test start-build --wait search-inside-elastic"
+  shell: "oc -n {{openshift_namespace}} start-build --wait search-inside-elastic"
   delegate_to: localhost
 
 - name: Search inside kibana Image Stream
@@ -61,7 +61,7 @@
     kind: ImageStream
     metadata:
       name: search-inside-kibana
-      namespace: "wwp-test"
+      namespace: "{{openshift_namespace}}"
       labels:
         build: search-inside-kibana
     spec:
@@ -85,7 +85,7 @@
     kind: BuildConfig
     metadata:
       name: search-inside-kibana
-      namespace: "wwp-test"
+      namespace: "{{openshift_namespace}}"
       labels:
         build: search-inside
     spec:
@@ -104,7 +104,7 @@
 
 - name: "Rebuild search inside kibana image now"
   when: _openshift_image_search_inside_kibana is changed
-  shell: "oc -n wwp-test start-build --wait search-inside-kibana"
+  shell: "oc -n {{openshift_namespace}} start-build --wait search-inside-kibana"
   delegate_to: localhost
 
 - name: search-inside-elastic Deployment Config
@@ -113,7 +113,7 @@
     kind: DeploymentConfig
     metadata:
       name: search-inside-elastic
-      namespace: "wwp-test"
+      namespace: "{{openshift_namespace}}"
     spec:
       replicas: 1
       selector:
@@ -140,7 +140,7 @@
                 value: '-Xms4096m -Xmx4096m'
               - name: 'discovery.type'
                 value: 'single-node'
-              image: 'docker-registry.default.svc:5000/wwp-test/search-inside-elastic:latest'
+              image: 'docker-registry.default.svc:5000/{{openshift_namespace}}/search-inside-elastic:latest'
               imagePullPolicy: Always
               name: search-inside-elastic
               resources: {}
@@ -160,7 +160,7 @@
           from:
             kind: ImageStreamTag
             name: 'search-inside-elastic:latest'
-            namespace: "wwp-test"
+            namespace: "{{openshift_namespace}}"
 
 - name: search-inside-elastic Service
   openshift:
@@ -169,7 +169,7 @@
     kind: Service
     metadata:
       name: "{{ searchinside_elastic_servicename }}"
-      namespace: "wwp-test"
+      namespace: "{{openshift_namespace}}"
     spec:
       type: ClusterIP
       ports:
@@ -185,7 +185,7 @@
     kind: DeploymentConfig
     metadata:
       name: search-inside-kibana
-      namespace: "wwp-test"
+      namespace: "{{openshift_namespace}}"
     spec:
       replicas: 1
       selector:
@@ -209,10 +209,10 @@
           containers:
             - env:
               - name: 'ELASTICSEARCH_URL'
-                value: 'http://search-inside-elastic.wwp-test.svc:9200'
-              - name: 'ELASTICSEARCH_HOSTS'
-                value: '["http://search-inside-elastic.wwp-test.svc:9200"]'
-              image: 'docker-registry.default.svc:5000/wwp-test/search-inside-kibana:latest'
+                value: 'http://search-inside-elastic.{{openshift_namespace}}.svc:9200'
+              #- name: 'ELASTICSEARCH_HOSTS'
+              #  value: '["http://search-inside-elastic.{{openshift_namespace}}.svc:9200"]'
+              image: 'docker-registry.default.svc:5000/{{openshift_namespace}}/search-inside-kibana:latest'
               imagePullPolicy: Always
               name: search-inside-kibana
               resources: {}
@@ -230,7 +230,7 @@
           from:
             kind: ImageStreamTag
             name: 'search-inside-kibana:latest'
-            namespace: "wwp-test"
+            namespace: "{{openshift_namespace}}"
 
 - name: search-inside-kibana Service
   openshift:
@@ -239,7 +239,7 @@
     kind: Service
     metadata:
       name: "{{ searchinside_kibana_servicename }}"
-      namespace: "wwp-test"
+      namespace: "{{openshift_namespace}}"
     spec:
       type: ClusterIP
       ports:
@@ -256,7 +256,7 @@
     kind: ImageStream
     metadata:
       name: search-inside-nodejsb
-      namespace: "wwp-test"
+      namespace: "{{openshift_namespace}}"
       labels:
         build: search-inside-nodejsb
     spec:
@@ -280,7 +280,7 @@
     kind: BuildConfig
     metadata:
       name: search-inside-nodejsb
-      namespace: "wwp-test"
+      namespace: "{{openshift_namespace}}"
       labels:
         build: search-inside-nodejsb
     spec:
@@ -306,7 +306,7 @@
     kind: DeploymentConfig
     metadata:
       name: search-inside-nodejsb
-      namespace: "wwp-test"
+      namespace: "{{openshift_namespace}}"
     spec:
       replicas: 1
       selector:
@@ -330,10 +330,10 @@
           containers:
             - env:
               - name: 'ELASTICSEARCH_URL'
-                value: 'http://search-inside-elastic.wwp-test.svc:9200'
-              - name: 'ELASTICSEARCH_HOSTS'
-                value: '["http://search-inside-elastic.wwp-test.svc:9200"]'
-              image: 'docker-registry.default.svc:5000/wwp-test/search-inside-nodejsb:latest'
+                value: 'http://search-inside-elastic.{{openshift_namespace}}.svc:9200'
+              #- name: 'ELASTICSEARCH_HOSTS'
+              #  value: '["http://search-inside-elastic.{{openshift_namespace}}.svc:9200"]'
+              image: 'docker-registry.default.svc:5000/{{openshift_namespace}}/search-inside-nodejsb:latest'
               imagePullPolicy: Always
               name: search-inside-nodejsb
               resources: {}
@@ -351,7 +351,7 @@
           from:
             kind: ImageStreamTag
             name: 'search-inside-nodejsb:latest'
-            namespace: "wwp-test"
+            namespace: "{{openshift_namespace}}"
 
 - name: search-nodejs-backend Service
   openshift:
@@ -360,7 +360,7 @@
     kind: Service
     metadata:
       name: "{{ searchinside_nodejsb_servicename }}"
-      namespace: "wwp-test"
+      namespace: "{{openshift_namespace}}"
     spec:
       type: ClusterIP
       ports:
@@ -377,7 +377,7 @@
     kind: ImageStream
     metadata:
       name: search-inside-nodejsf
-      namespace: "wwp-test"
+      namespace: "{{openshift_namespace}}"
       labels:
         build: search-inside-nodejsf
     spec:
@@ -401,7 +401,7 @@
     kind: BuildConfig
     metadata:
       name: search-inside-nodejsf
-      namespace: "wwp-test"
+      namespace: "{{openshift_namespace}}"
       labels:
         build: search-inside-nodejsf
     spec:
@@ -427,7 +427,7 @@
     kind: DeploymentConfig
     metadata:
       name: search-inside-nodejsf
-      namespace: "wwp-test"
+      namespace: "{{openshift_namespace}}"
     spec:
       replicas: 1
       selector:
@@ -451,10 +451,10 @@
           containers:
             - env:
               - name: 'ELASTICSEARCH_URL'
-                value: 'http://search-inside-elastic.wwp-test.svc:9200'
-              - name: 'ELASTICSEARCH_HOSTS'
-                value: '["http://search-inside-elastic.wwp-test.svc:9200"]'
-              image: 'docker-registry.default.svc:5000/wwp-test/search-inside-nodejsf:latest'
+                value: 'http://search-inside-elastic.{{openshift_namespace}}.svc:9200'
+              #- name: 'ELASTICSEARCH_HOSTS'
+              #  value: '["http://search-inside-elastic.{{openshift_namespace}}.svc:9200"]'
+              image: 'docker-registry.default.svc:5000/{{openshift_namespace}}/search-inside-nodejsf:latest'
               imagePullPolicy: Always
               name: search-inside-nodejsf
               resources: {}
@@ -472,7 +472,7 @@
           from:
             kind: ImageStreamTag
             name: 'search-inside-nodejsf:latest'
-            namespace: "wwp-test"
+            namespace: "{{openshift_namespace}}"
 
 - name: search-nodejs-frontend Service
   openshift:
@@ -481,7 +481,7 @@
     kind: Service
     metadata:
       name: "{{ searchinside_nodejsf_servicename }}"
-      namespace: "wwp-test"
+      namespace: "{{openshift_namespace}}"
     spec:
       type: ClusterIP
       ports:
