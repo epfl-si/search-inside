@@ -3,8 +3,8 @@ const html_entities = require('html-entities')
 const request = require('request').defaults({ encoding: null })
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
-let url = 'https://searchinside-elastic.epfl.ch'
-//let url = 'http://search-inside-elastic.wwp-test.svc:9200'
+//let url = 'https://searchinside-elastic.epfl.ch'
+let url = 'http://search-inside-elastic.wwp-test.svc:9200'
 
 //Sites
 let sites = ['help-wordpress', 'ae', 'internalhr', 'finances'];
