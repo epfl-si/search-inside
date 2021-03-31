@@ -6,22 +6,29 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 //let url = 'https://searchinside-elastic.epfl.ch'
 let url = 'http://search-inside-elastic.wwp-test.svc:9200'
 
+//Sites
+let sites = ['help-wordpress', 'ae', 'internalhr', 'finances'];
+
 //Read url and write the content of pages in elasticsearch
-const getPages = async () => {
+const getPages = async (site) => {
     console.log('getPages')
+
     return axios
-        .get('https://inside.epfl.ch/help-wordpress/wp-json/wp/v2/pages?per_page=100')
+        .get(`https://inside.epfl.ch/${site}/wp-json/wp/v2/pages?per_page=100`)
         .then((result) => result)
         .catch((error) => {
             console.error('Erreur get pages ' + error)
         })
+    
 }
 
 //Read url and write the content of medias in elasticsearch
-const getMedias = async () => {
+const getMedias = async (site) => {
     console.log('getMedias')
-    return axios
-        .get('https://inside.epfl.ch/help-wordpress/wp-json/wp/v2/media?per_page=100')
+    
+        console.log("MEDIA : " + site)
+        return axios
+        .get(`https://inside.epfl.ch/${site}/wp-json/wp/v2/media?per_page=100`)
         .then((result) => result)
         .catch((error) => {
             console.error('Erreur get medias ' + error)
@@ -189,21 +196,24 @@ const copy_inside_temp_to_inside = async () => {
 const get_data_from_pages = async () => {
     console.log('get_data_from_pages_debut' + new Date().toISOString())
     try {
-        let pages = await getPages()
+        for (let site of sites) {
+                console.log(site);
+            let pages = await getPages(site)
 
-        // loop over each entries to display title
-        for (let page of pages.data) {
-            let link_page = page.link
-            let title_page = page.title.rendered
+            // loop over each entries to display title
+            for (let page of pages.data) {
+                let link_page = page.link
+                let title_page = page.title.rendered
 
-            let content_page = page.content.rendered
-            let StripHTML = content_page.replace(/(<([^>]+)>)/gi, '')
-            let StripHTMLUTF8 = html_entities.decode(StripHTML)
-            let StripHTMLBreakLines = StripHTMLUTF8.replace(/\r?\n|\r/g, '')
-            await write_data_pages(link_page, title_page, StripHTMLBreakLines)
-        }
+                let content_page = page.content.rendered
+                let StripHTML = content_page.replace(/(<([^>]+)>)/gi, '')
+                let StripHTMLUTF8 = html_entities.decode(StripHTML)
+                let StripHTMLBreakLines = StripHTMLUTF8.replace(/\r?\n|\r/g, '')
+                await write_data_pages(link_page, title_page, StripHTMLBreakLines)
+            }
 
-        console.log('get_data_from_pages_fin' + new Date().toISOString())
+            console.log('get_data_from_pages_fin' + new Date().toISOString())
+            }
     } catch (e) {
         console.log('Erreur get data from pages ' + e)
     }
@@ -213,8 +223,12 @@ const get_data_from_pages = async () => {
 const get_data_from_medias = async () => {
     console.log('get_data_from_medias_debut' + new Date().toISOString())
     try {
+
+        for (let site of sites) {
+            console.log(site);
+
         // loop over each entries to display title
-        let medias = await getMedias()
+        let medias = await getMedias(site)
 
         // loop over each data entries
         for (let media of medias.data) {
@@ -230,7 +244,8 @@ const get_data_from_medias = async () => {
             }
         }
 
-        console.log('get_data_from_medias_fin' + new Date().toISOString())
+            console.log('get_data_from_medias_fin' + new Date().toISOString())
+        }
     } catch (e) {
         console.log('Erreur get data from medias' + e)
     }
