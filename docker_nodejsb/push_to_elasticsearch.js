@@ -12,9 +12,12 @@ let sites = ['help-wordpress', 'ae', 'internalhr', 'finances'];
 //Read url and write the content of pages in elasticsearch
 const getPages = async (site) => {
     console.log('getPages')
-
+    
+    const agent = new https.Agent({  
+        rejectUnauthorized: false
+       });
     return axios
-        .get(`https://inside.epfl.ch/${site}/wp-json/wp/v2/pages?per_page=100`)
+        .get(`https://httpd-inside:8443/${site}/wp-json/wp/v2/pages?per_page=100`, {httpsAgent: agent, headers:{Host:"inside.epfl.ch"}})
         .then((result) => result)
         .catch((error) => {
             console.error('Erreur get pages ' + error)
