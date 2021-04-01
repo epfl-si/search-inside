@@ -16,6 +16,7 @@ const getPages = async (site) => {
     const agent = new https.Agent({  
         rejectUnauthorized: false
        });
+    console.log("before get axios")
     return axios
         .get(`https://httpd-inside:8443/${site}/wp-json/wp/v2/pages?per_page=100`, {httpsAgent: agent, headers:{Host:"inside.epfl.ch"}})
         .then((result) => result)
@@ -201,7 +202,7 @@ const get_data_from_pages = async () => {
         for (let site of sites) {
                 console.log(site);
             let pages = await getPages(site)
-
+            console.log("After call getPages")
             // loop over each entries to display title
             for (let page of pages.data) {
                 let link_page = page.link
