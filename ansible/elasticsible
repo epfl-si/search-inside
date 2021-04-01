@@ -54,12 +54,16 @@ oc_check () {
 ###########################################################################
 
 mode=ansible-playbook
+inventory_mode="test"
 
 declare -a ansible_args
 while [ "$#" -gt 0 ]; do
   case "$1" in
         -m) mode=ansible
             ansible_args+=("-m")
+            shift ;;
+        --prod)
+            inventory_mode="test_and_prod"
             shift ;;
         *)
             ansible_args+=("$1")
@@ -75,7 +79,10 @@ esac
 set -e
 
 inventories () {
-    echo "-i host-test"
+     case "$inventory_mode" in
+        test) echo "-i host-test" ;;
+        test_and_prod) echo "-i host-test -i host-prod" ;;
+    esac
 }
 
 platform_check
