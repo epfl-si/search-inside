@@ -2,6 +2,7 @@ const axios = require('axios')
 const html_entities = require('html-entities')
 const request = require('request').defaults({ encoding: null })
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+const https = require('https')
 
 //let url = 'https://searchinside-elastic.epfl.ch'
 let url = 'http://search-inside-elastic:9200'
@@ -13,7 +14,7 @@ let sites = ['help-wordpress', 'ae', 'internalhr', 'finances'];
 const getPages = async (site) => {
     console.log('getPages')
     
-    const agent = new https.Agent({  
+    const agent = new https.Agent({ 
         rejectUnauthorized: false
        });
     console.log("before get axios")
