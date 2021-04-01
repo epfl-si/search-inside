@@ -22,7 +22,6 @@ const getPages = async (site) => {
         .catch((error) => {
             console.error('Erreur get pages ' + error)
         })
-    
 }
 
 //Read url and write the content of medias in elasticsearch
