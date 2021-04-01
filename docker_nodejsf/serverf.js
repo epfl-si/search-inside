@@ -56,7 +56,7 @@ app.get('/', (request, response) => {
 app.post('/', (request, response) => {
     let get_research = request.body.research
     //let url = 'https://searchinside-elastic.epfl.ch'
-    let url = 'http://search-inside-elastic.wwp-test.svc:9200'
+    let url = 'http://search-inside-elastic:9200'
 
     const getPages = async () => {
         return axios
