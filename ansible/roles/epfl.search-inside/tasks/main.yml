@@ -210,8 +210,8 @@
             - env:
               - name: 'ELASTICSEARCH_URL'
                 value: 'http://search-inside-elastic.{{openshift_namespace}}.svc:9200'
-              #- name: 'ELASTICSEARCH_HOSTS'
-              #  value: '["http://search-inside-elastic.{{openshift_namespace}}.svc:9200"]'
+              - name: 'ELASTICSEARCH_HOSTS'
+                value: 'http://search-inside-elastic.{{openshift_namespace}}.svc:9200'
               image: 'docker-registry.default.svc:5000/{{openshift_namespace}}/search-inside-kibana:latest'
               imagePullPolicy: Always
               name: search-inside-kibana
@@ -331,8 +331,8 @@
             - env:
               - name: 'ELASTICSEARCH_URL'
                 value: 'http://search-inside-elastic.{{openshift_namespace}}.svc:9200'
-              #- name: 'ELASTICSEARCH_HOSTS'
-              #  value: '["http://search-inside-elastic.{{openshift_namespace}}.svc:9200"]'
+              - name: 'ELASTICSEARCH_HOSTS'
+                value: 'http://search-inside-elastic.{{openshift_namespace}}.svc:9200'
               image: 'docker-registry.default.svc:5000/{{openshift_namespace}}/search-inside-nodejsb:latest'
               imagePullPolicy: Always
               name: search-inside-nodejsb
@@ -452,8 +452,8 @@
             - env:
               - name: 'ELASTICSEARCH_URL'
                 value: 'http://search-inside-elastic.{{openshift_namespace}}.svc:9200'
-              #- name: 'ELASTICSEARCH_HOSTS'
-              #  value: '["http://search-inside-elastic.{{openshift_namespace}}.svc:9200"]'
+              - name: 'ELASTICSEARCH_HOSTS'
+                value: 'http://search-inside-elastic.{{openshift_namespace}}.svc:9200'
               image: 'docker-registry.default.svc:5000/{{openshift_namespace}}/search-inside-nodejsf:latest'
               imagePullPolicy: Always
               name: search-inside-nodejsf
