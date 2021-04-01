@@ -16,27 +16,28 @@ const getPages = async (site) => {
     
     const agent = new https.Agent({ 
         rejectUnauthorized: false
-       });
-    console.log("before get axios")
+    });
     return axios
         .get(`https://httpd-inside:8443/${site}/wp-json/wp/v2/pages?per_page=100`, {httpsAgent: agent, headers:{Host:"inside.epfl.ch"}})
         .then((result) => result)
         .catch((error) => {
             console.error('Erreur get pages ' + error)
-        })
+    })
 }
 
 //Read url and write the content of medias in elasticsearch
 const getMedias = async (site) => {
     console.log('getMedias')
     
-        console.log("MEDIA : " + site)
-        return axios
-        .get(`https://inside.epfl.ch/${site}/wp-json/wp/v2/media?per_page=100`)
+    const agent = new https.Agent({ 
+        rejectUnauthorized: false
+    });
+    return axios
+        .get(`https://httpd-inside:8443/${site}/wp-json/wp/v2/media?per_page=100`, {httpsAgent: agent, headers:{Host:"inside.epfl.ch"}})
         .then((result) => result)
         .catch((error) => {
             console.error('Erreur get medias ' + error)
-        })
+    })
 }
 
 //Convert file to base64
@@ -203,7 +204,7 @@ const get_data_from_pages = async () => {
         for (let site of sites) {
                 console.log(site);
             let pages = await getPages(site)
-            console.log("After call getPages")
+
             // loop over each entries to display title
             for (let page of pages.data) {
                 let link_page = page.link
@@ -257,7 +258,6 @@ const get_data_from_medias = async () => {
 
 const launch_script = async () => {
     console.log('launch_script')
-    console.log('Testing Image')
     await delete_inside_temp()
     //waiting 2 seconds
     await delay(2000) 
