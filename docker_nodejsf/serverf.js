@@ -13,25 +13,29 @@ const hbs = exphbs.create({
                 pos_query = value.toLowerCase().indexOf(query.toLowerCase())
                 size_query = query.length
                 size_before_after = 100
-                if (pos_query >= size_before_after) {
-                    result =
-                        '[...] ' +
-                        value.substring(pos_query - size_before_after, pos_query) +
-                        '<b>' +
-                        value.substring(pos_query, pos_query + size_query) +
-                        '</b>' +
-                        value.substring(pos_query + size_query, pos_query + size_query + size_before_after)
+                if (pos_query == -1) {
+                    result = value.substring(0, size_before_after) + ' [...]'
                 } else {
-                    result =
-                        value.substring(0, pos_query) +
-                        '<b>' +
-                        value.substring(pos_query, pos_query + size_query) +
-                        '</b>' +
-                        value.substring(pos_query + size_query, pos_query + size_query + size_before_after)
-                }
-                size_query_to_end = value.substring(pos_query + size_query).length
-                if (size_query_to_end > size_before_after) {
-                    return result + ' [...]'
+                    if (pos_query >= size_before_after) {
+                        result =
+                            '[...] ' +
+                            value.substring(pos_query - size_before_after, pos_query) +
+                            '<b>' +
+                            value.substring(pos_query, pos_query + size_query) +
+                            '</b>' +
+                            value.substring(pos_query + size_query, pos_query + size_query + size_before_after)
+                    } else {
+                        result =
+                            value.substring(0, pos_query) +
+                            '<b>' +
+                            value.substring(pos_query, pos_query + size_query) +
+                            '</b>' +
+                            value.substring(pos_query + size_query, pos_query + size_query + size_before_after)
+                    }
+                    size_query_to_end = value.substring(pos_query + size_query).length
+                    if (size_query_to_end > size_before_after) {
+                        return result + ' [...]'
+                    }
                 }
                 return result
             } else {
@@ -40,8 +44,8 @@ const hbs = exphbs.create({
         },
     },
 })
-var viewPath = path.join(__dirname, 'views');
-app.set('views', viewPath);
+var viewPath = path.join(__dirname, 'views')
+app.set('views', viewPath)
 app.engine('handlebars', hbs.engine)
 app.set('view engine', 'handlebars')
 
