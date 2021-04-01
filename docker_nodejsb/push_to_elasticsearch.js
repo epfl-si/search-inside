@@ -256,6 +256,7 @@ const get_data_from_medias = async () => {
 
 const launch_script = async () => {
     console.log('launch_script')
+    console.log('Testing Image')
     await delete_inside_temp()
     //waiting 2 seconds
     await delay(2000) 
