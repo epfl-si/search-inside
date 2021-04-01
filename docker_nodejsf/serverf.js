@@ -14,7 +14,7 @@ const hbs = exphbs.create({
                 size_query = query.length
                 size_before_after = 100
                 if (pos_query == -1) {
-                    result = value.substring(0, size_before_after) + ' [...]'
+                    result = value.substring(0, size_before_after)
                 } else {
                     if (pos_query >= size_before_after) {
                         result =
@@ -32,10 +32,10 @@ const hbs = exphbs.create({
                             '</b>' +
                             value.substring(pos_query + size_query, pos_query + size_query + size_before_after)
                     }
-                    size_query_to_end = value.substring(pos_query + size_query).length
-                    if (size_query_to_end > size_before_after) {
-                        return result + ' [...]'
-                    }
+                }
+                size_query_to_end = value.substring(pos_query + size_query).length
+                if (size_query_to_end > size_before_after) {
+                    return result + ' [...]'
                 }
                 return result
             } else {
