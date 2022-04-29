@@ -40,7 +40,7 @@
       runPolicy: Serial
       source:
         git:
-          uri: "https://github.com/epfl-si/search_inside"
+          uri: "https://github.com/epfl-si/search-inside"
         contextDir: "docker_elasticsearch"
       strategy:
         dockerStrategy:
@@ -291,7 +291,7 @@
       runPolicy: Serial
       source:
         git:
-          uri: "https://github.com/epfl-si/search_inside"
+          uri: "https://github.com/epfl-si/search-inside"
         contextDir: "docker_nodejsb"
       strategy:
         dockerStrategy:

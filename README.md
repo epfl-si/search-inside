@@ -1,4 +1,4 @@
-# search_inside
+# search-inside
 
 A POC (proof of concept) to check if it is possible to search the pages and media of the EPFL inside pages.  
 First, it was done locally on a Synology NAS with docker and then we switched to openshift and ansible.  
