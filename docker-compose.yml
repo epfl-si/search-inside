@@ -1,0 +1,42 @@
+version: '2'
+
+services:
+  elastic:
+    build:
+      context: ./docker_elasticsearch
+      dockerfile: Dockerfile
+    container_name: search-inside-elastic
+    environment:
+      - xpack.security.enabled=false
+      - "discovery.type=single-node"
+    ports:
+      - "9200:9200"
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.11.0
+    container_name: search-inside-kibana
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_URL=http://search-inside-elastic:9200
+      - ELASTICSEARCH_HOSTS=http://search-inside-elastic:9200
+    depends_on:
+      - elastic
+  nodejsb:
+    build:
+      context: ./docker_nodejsb
+      dockerfile: Dockerfile
+    container_name: search-inside-nodejsb
+    ports:
+      - "5602:5602"
+    environment:
+      - RUNNING_HOST=local
+    command: nodemon /app/push_to_elasticsearch.js
+    volumes:
+      - ./docker_nodejsb/push_to_elasticsearch.js:/app/push_to_elasticsearch.js
+  nodejsf:
+    build:
+      context: ./docker_nodejsf
+      dockerfile: Dockerfile
+    container_name: search-inside-nodejsf
+    ports:
+      - "5603:5603"

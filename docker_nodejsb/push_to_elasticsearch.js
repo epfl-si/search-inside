@@ -7,6 +7,12 @@ const https = require('https')
 //let url = 'https://searchinside-elastic.epfl.ch'
 let url = 'http://search-inside-elastic:9200'
 
+//Adapt host of inside websites depending where it is running (OS or public)
+let inside_host = 'httpd-inside:8443'
+if (process.env.RUNNING_HOST == "local") {
+    inside_host = 'inside.epfl.ch'
+}
+
 //Sites
 let sites = ['help-wordpress', 'ae', 'internalhr', 'finances'];
 
@@ -18,7 +24,7 @@ const getPages = async (site) => {
         rejectUnauthorized: false
     });
     return axios
-        .get(`https://httpd-inside:8443/${site}/wp-json/wp/v2/pages?per_page=100`, {httpsAgent: agent, headers:{Host:"inside.epfl.ch"}})
+        .get(`https://${inside_host}/${site}/wp-json/wp/v2/pages?per_page=100`, {httpsAgent: agent, headers:{Host:"inside.epfl.ch"}})
         .then((result) => result)
         .catch((error) => {
             console.error('Erreur get pages ' + error)
@@ -33,7 +39,7 @@ const getMedias = async (site) => {
         rejectUnauthorized: false
     });
     return axios
-        .get(`https://httpd-inside:8443/${site}/wp-json/wp/v2/media?per_page=100`, {httpsAgent: agent, headers:{Host:"inside.epfl.ch"}})
+        .get(`https://${inside_host}/${site}/wp-json/wp/v2/media?per_page=100`, {httpsAgent: agent, headers:{Host:"inside.epfl.ch"}})
         .then((result) => result)
         .catch((error) => {
             console.error('Erreur get medias ' + error)
