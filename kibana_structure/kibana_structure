@@ -1,4 +1,4 @@
-//Get all content of inside
+// Get all content of inside
 GET inside/_search
 {
   "query": {
@@ -6,7 +6,7 @@ GET inside/_search
   }
 }
 
-//Get in inside the indexes that contains saturn7
+// Get in inside the indexes that contains saturn7
 GET inside/_search
 {
    "_source": ["title", "description", "url", "attachment.content", "attachment.content_type", "attachment.author", "attachment.title"],
@@ -18,9 +18,8 @@ GET inside/_search
   }
 }
 
-
-//Structure of inside
-POST /inside/_doc/
+// Structure of inside
+POST /inside
 {
   "mappings" : 
   {
@@ -56,12 +55,10 @@ POST /inside/_doc/
   }
 }
 
-//Delete structure and indexes of inside
+// Delete structure and indexes of inside
 DELETE inside
 
-
-
-//Put a field that contains attachments
+// Put a field that contains attachments
 PUT _ingest/pipeline/attachment
 {
   "description" : "Extract attachment information",
@@ -74,8 +71,7 @@ PUT _ingest/pipeline/attachment
   ]
 }
 
-
-//Copy the indexes the inside_temp into inside
+// Copy the indexes the inside_temp into inside
 POST _reindex
 {
   "source": {

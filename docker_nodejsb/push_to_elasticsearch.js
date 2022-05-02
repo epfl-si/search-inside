@@ -121,8 +121,8 @@ const create_inside_temp = async () => {
     console.log('create_inside_temp_debut' + new Date().toISOString())
     try {
         axios({
-            method: 'POST',
-            url: `${url}/inside_temp/_doc/`,
+            method: 'PUT',
+            url: `${url}/inside_temp`,
             data: {
                 mappings: {
                     properties: {
