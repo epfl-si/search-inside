@@ -1,82 +1,85 @@
-let exphbs = require('express-handlebars')
-let express = require('express')
-let path = require('path')
-let bodyParser = require('body-parser')
-let axios = require('axios')
+const exphbs = require('express-handlebars');
+const express = require('express');
+const path = require('path');
+const bodyParser = require('body-parser');
+const axios = require('axios');
 
-let app = express()
+const app = express();
 
 const hbs = exphbs.create({
-    helpers: {
-        short_description: function (value, query) {
-            if (value != undefined) {
-                pos_query = value.toLowerCase().indexOf(query.toLowerCase())
-                size_query = query.length
-                size_before_after = 100
-                if (pos_query == -1) {
-                    result = value.substring(0, size_before_after)
-                } else {
-                    if (pos_query >= size_before_after) {
-                        result =
-                            '[...] ' +
-                            value.substring(pos_query - size_before_after, pos_query) +
-                            '<b>' +
-                            value.substring(pos_query, pos_query + size_query) +
-                            '</b>' +
-                            value.substring(pos_query + size_query, pos_query + size_query + size_before_after)
-                    } else {
-                        result =
-                            value.substring(0, pos_query) +
-                            '<b>' +
-                            value.substring(pos_query, pos_query + size_query) +
-                            '</b>' +
-                            value.substring(pos_query + size_query, pos_query + size_query + size_before_after)
-                    }
-                }
-                size_query_to_end = value.substring(pos_query + size_query).length
-                if (size_query_to_end > size_before_after) {
-                    return result + ' [...]'
-                }
-                return result
-            } else {
-                return
-            }
-        },
-    },
-})
-var viewPath = path.join(__dirname, 'views')
-app.set('views', viewPath)
-app.engine('handlebars', hbs.engine)
-app.set('view engine', 'handlebars')
+  helpers: {
+    short_description: function (value, query) {
+      if (value !== undefined) {
+        const posQuery = value.toLowerCase().indexOf(query.toLowerCase());
+        const sizeQuery = query.length;
+        const sizeBeforeAfter = 100;
+        let result = '';
+        if (posQuery === -1) {
+          result = value.substring(0, sizeBeforeAfter);
+        } else {
+          if (posQuery >= sizeBeforeAfter) {
+            result =
+              '[...] ' +
+              value.substring(posQuery - sizeBeforeAfter, posQuery) +
+              '<b>' +
+              value.substring(posQuery, posQuery + sizeQuery) +
+              '</b>' +
+              value.substring(posQuery + sizeQuery, posQuery + sizeQuery + sizeBeforeAfter);
+          } else {
+            result =
+              value.substring(0, posQuery) +
+              '<b>' +
+              value.substring(posQuery, posQuery + sizeQuery) +
+              '</b>' +
+              value.substring(posQuery + sizeQuery, posQuery + sizeQuery + sizeBeforeAfter);
+          }
+        }
+        const sizeQueryToEnd = value.substring(posQuery + sizeQuery).length;
+        if (sizeQueryToEnd > sizeBeforeAfter) {
+          return result + ' [...]';
+        }
+        return result;
+      } else {
+        return '';
+      }
+    }
+  }
+});
 
-app.use(express.static('public'))
-app.use(bodyParser.urlencoded({ extended: false }))
-app.use(bodyParser.json())
+const viewPath = path.join(__dirname, 'views');
+
+app.set('views', viewPath);
+app.engine('handlebars', hbs.engine);
+app.set('view engine', 'handlebars');
+
+app.use(express.static('public'));
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
 app.get('/', (request, response) => {
-    response.render('index', { result: '', query: '', title: 'Elasticsearch Inside' })
-})
+  response.render('index', { result: '', query: '', title: 'Elasticsearch Inside' });
+});
 
 app.post('/', (request, response) => {
-    let get_research = request.body.research
-    //let url = 'https://searchinside-elastic.epfl.ch'
-    let url = 'http://search-inside-elastic:9200'
+  const getResearch = request.body.research;
+  // let url = 'https://searchinside-elastic.epfl.ch'
+  const url = 'http://search-inside-elastic:9200';
 
-    const getPages = async () => {
-        return axios
-            .get(`${url}/inside/_search?q=${get_research}`)
-            .then((result) => result)
-            .catch((error) => {
-                console.error('Erreur copy temp to inside ' + error)
-            })
-    }
+  const getPages = async () => {
+    return axios
+      .get(`${url}/inside/_search?q=${getResearch}`)
+      .then((result) => result)
+      .catch((error) => {
+        console.error('Erreur copy temp to inside ' + error);
+      });
+  };
 
-    const getData = async () => {
-        let pages = await getPages()
-        response.render('index', { query: get_research, title: 'Elasticsearch Inside', result: pages.data.hits.hits })
-    }
+  const getData = async () => {
+    const pages = await getPages();
+    response.render('index', { query: getResearch, title: 'Elasticsearch Inside', result: pages.data.hits.hits });
+  };
 
-    getData()
-})
+  getData();
+});
 
-app.listen(5603)
+app.listen(5603);

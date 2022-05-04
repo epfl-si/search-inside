@@ -1,282 +1,284 @@
-const axios = require('axios')
-const html_entities = require('html-entities')
-const request = require('request').defaults({ encoding: null })
-const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
-const https = require('https')
+const axios = require('axios');
+const htmlEntities = require('html-entities');
+const request = require('request').defaults({ encoding: null });
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const https = require('https');
 
-//let url = 'https://searchinside-elastic.epfl.ch'
-let url = 'http://search-inside-elastic:9200'
+// let url = 'https://searchinside-elastic.epfl.ch'
+const url = 'http://search-inside-elastic:9200';
 
-//Adapt host of inside websites depending where it is running (OS or public)
-let inside_host = 'httpd-inside:8443'
-if (process.env.RUNNING_HOST == "local") {
-    inside_host = 'inside.epfl.ch'
+// Adapt host of inside websites depending where it is running (OS or public)
+let insideHost = 'httpd-inside:8443';
+if (process.env.RUNNING_HOST === 'local') {
+  insideHost = 'inside.epfl.ch';
 }
 
-//Sites
-let sites = ['help-wordpress', 'ae', 'internalhr', 'finances'];
+// Sites
+const sites = ['help-wordpress'];
 
-//Read url and write the content of pages in elasticsearch
+// Read url and write the content of pages in elasticsearch
 const getPages = async (site) => {
-    console.log('getPages')
-    
-    const agent = new https.Agent({ 
-        rejectUnauthorized: false
-    });
-    return axios
-        .get(`https://${inside_host}/${site}/wp-json/wp/v2/pages?per_page=100`, {httpsAgent: agent, headers:{Host:"inside.epfl.ch"}})
-        .then((result) => result)
-        .catch((error) => {
-            console.error('Erreur get pages ' + error)
-    })
-}
+  console.log('getPages');
 
-//Read url and write the content of medias in elasticsearch
+  const agent = new https.Agent({ rejectUnauthorized: false });
+
+  return axios
+    .get(
+      `https://${insideHost}/${site}/wp-json/wp/v2/pages?per_page=100`,
+      { httpsAgent: agent, headers: { Host: 'inside.epfl.ch' } }
+    )
+    .then((result) => result)
+    .catch((error) => {
+      console.error('Erreur get pages ' + error);
+    });
+};
+
+// Read url and write the content of medias in elasticsearch
 const getMedias = async (site) => {
-    console.log('getMedias')
-    
-    const agent = new https.Agent({ 
-        rejectUnauthorized: false
+  console.log('getMedias');
+
+  const agent = new https.Agent({ rejectUnauthorized: false });
+
+  return axios
+    .get(
+      `https://${insideHost}/${site}/wp-json/wp/v2/media?per_page=100`,
+      { httpsAgent: agent, headers: { Host: 'inside.epfl.ch' } }
+    )
+    .then((result) => result)
+    .catch((error) => {
+      console.error('Erreur get medias ' + error);
     });
-    return axios
-        .get(`https://${inside_host}/${site}/wp-json/wp/v2/media?per_page=100`, {httpsAgent: agent, headers:{Host:"inside.epfl.ch"}})
-        .then((result) => result)
-        .catch((error) => {
-            console.error('Erreur get medias ' + error)
+};
+
+// Convert file to base64
+const convertFilesToBase64 = async (fileName, sourceMedia) => {
+  console.log('convertFilesToBase64_debut ' + fileName + new Date().toISOString());
+  try {
+    // Convert file from url to base64
+    request.get(`${sourceMedia}`, async (error, response, body) => {
+      if (error) {
+        console.log('Error get sourceMedia: ' + error);
+      } else {
+        const data = Buffer.from(body).toString('base64');
+        axios({
+          method: 'POST',
+          url: `${url}/inside_temp/_doc?pipeline=attachment`,
+          data: {
+            url: `${sourceMedia}`,
+            rights: 'test',
+            data: `${data}`
+          }
+        });
+      }
+    });
+
+    console.log('convertFilesToBase64_fin ' + fileName + new Date().toISOString());
+  } catch (e) {
+    console.log('Erreur base64 ' + e);
+  }
+};
+
+const writeDataPages = async (linkPage, titlePage, StripHTMLBreakLines) => {
+  console.log('writeDataPages_debut ' + titlePage + new Date().toISOString());
+  try {
+    // Write the data into elasticsearch
+    axios({
+      method: 'POST',
+      url: `${url}/inside_temp/_doc`,
+      data: {
+        url: `${linkPage}`,
+        title: `${titlePage}`,
+        description: `${StripHTMLBreakLines}`,
+        rights: 'test'
+      }
+    });
+
+    console.log('writeDataPages_fin ' + titlePage + new Date().toISOString());
+  } catch (e) {
+    console.log('Erreur write data pages ' + e);
+  }
+};
+
+// Delete inside temp
+const deleteInsideTemp = async () => {
+  console.log('deleteInsideTemp_debut' + new Date().toISOString());
+  return axios
+    .delete(`${url}/inside_temp`)
+    .then((result) => result)
+    .catch((error) => {
+      console.error('Erreur delete inside temp ' + error);
+    });
+};
+
+// Delete inside temp
+const deleteInside = async () => {
+  console.log('deleteInside_debut' + new Date().toISOString());
+  return axios
+    .delete(`${url}/inside`)
+    .then((result) => {
+      console.log(result.status);
     })
-}
+    .catch((error) => {
+      console.error('Erreur delete inside ' + error);
+    });
+};
 
-//Convert file to base64
-const convert_files_to_base64 = async (file_name, source_media) => {
-    console.log('convert_files_to_base64_debut ' + file_name + new Date().toISOString())
-    try {
-        //Convert file from url to base64
-        request.get(`${source_media}`, async function (error, response, body) {
-            data = Buffer.from(body).toString('base64')
-            axios({
-                method: 'POST',
-                url: `${url}/inside_temp/_doc?pipeline=attachment`,
-                data: {
-                    url: `${source_media}`,
-                    rights: `test`,
-                    data: `${data}`,
-                },
-            })
-        })
-
-        console.log('convert_files_to_base64_fin ' + file_name + new Date().toISOString())
-    } catch (e) {
-        console.log('Erreur base64 ' + e)
-    }
-}
-
-const write_data_pages = async (link_page, title_page, StripHTMLBreakLines) => {
-    console.log('write_data_pages_debut ' + title_page + new Date().toISOString())
-    try {
-        //Write the data into elasticsearch
-        axios({
-            method: 'POST',
-            url: `${url}/inside_temp/_doc`,
-            data: {
-                url: `${link_page}`,
-                title: `${title_page}`,
-                description: `${StripHTMLBreakLines}`,
-                rights: 'test',
+// Create inside temp
+const createInsideTemp = async () => {
+  console.log('createInsideTemp_debut' + new Date().toISOString());
+  try {
+    axios({
+      method: 'PUT',
+      url: `${url}/inside_temp`,
+      data: {
+        mappings: {
+          properties: {
+            url: {
+              type: 'text'
             },
-        })
-
-        console.log('write_data_pages_fin ' + title_page + new Date().toISOString())
-    } catch (e) {
-        console.log('Erreur write data pages ' + e)
-    }
-}
-
-//Delete inside temp
-const delete_inside_temp = async () => {
-    console.log('delete_inside_temp_debut' + new Date().toISOString())
-    return axios
-        .delete(`${url}/inside_temp`)
-        .then((result) => result)
-        .catch((error) => {
-            console.error('Erreur delete inside temp ' + error)
-        })
-}
-
-//Delete inside temp
-const delete_inside = async () => {
-    console.log('delete_inside_debut' + new Date().toISOString())
-    return axios
-        .delete(`${url}/inside`)
-        .then((result) => {
-            result
-            console.log(result.status)
-        })
-        .catch((error) => {
-            console.error('Erreur delete inside ' + error)
-        })
-}
-
-//Create inside temp
-const create_inside_temp = async () => {
-    console.log('create_inside_temp_debut' + new Date().toISOString())
-    try {
-        axios({
-            method: 'PUT',
-            url: `${url}/inside_temp`,
-            data: {
-                mappings: {
-                    properties: {
-                        url: {
-                            type: 'text',
-                        },
-                        title: {
-                            type: 'text',
-                        },
-                        description: {
-                            type: 'text',
-                        },
-                        rights: {
-                            type: 'text',
-                        },
-                        attachment: {
-                            properties: {
-                                content: {
-                                    type: 'text',
-                                },
-                            },
-                        },
-                    },
-                },
+            title: {
+              type: 'text'
             },
-        })
-
-        console.log('create_inside_temp_fin' + new Date().toISOString())
-    } catch (e) {
-        console.log('Erreur create inside temp ' + e)
-    }
-}
-
-//Create attachment field
-const create_attachment_field = async () => {
-    console.log('create_attachement_field_debut' + new Date().toISOString())
-    try {
-        axios({
-            method: 'PUT',
-            url: `${url}/_ingest/pipeline/attachment`,
-            data: {
-                description: 'Extract attachment information',
-                processors: [
-                    {
-                        attachment: {
-                            field: 'data',
-                        },
-                    },
-                ],
+            description: {
+              type: 'text'
             },
-        })
-
-        console.log('create_attachement_field_fin' + new Date().toISOString())
-    } catch (e) {
-        console.log('Erreur create attachment field ' + e)
-    }
-}
-
-//Copy inside temp into inside
-const copy_inside_temp_to_inside = async () => {
-    console.log('copy_inside_temp_to_inside_debut' + new Date().toISOString())
-    //Put the inside_temp into inside
-    return axios
-        .post(`${url}/_reindex`, {
-            source: {
-                index: 'inside_temp',
+            rights: {
+              type: 'text'
             },
-            dest: {
-                index: 'inside',
-            },
-        })
-        .then((result) => {
-            result
-            console.log(result.data)
-        })
-        .catch((error) => {
-            console.error('Erreur copy temp to inside ' + error)
-        })
-}
-
-//Get data from pages and medias
-const get_data_from_pages = async () => {
-    console.log('get_data_from_pages_debut' + new Date().toISOString())
-    try {
-        for (let site of sites) {
-                console.log(site);
-            let pages = await getPages(site)
-
-            // loop over each entries to display title
-            for (let page of pages.data) {
-                let link_page = page.link
-                let title_page = page.title.rendered
-
-                let content_page = page.content.rendered
-                let StripHTML = content_page.replace(/(<([^>]+)>)/gi, '')
-                let StripHTMLUTF8 = html_entities.decode(StripHTML)
-                let StripHTMLBreakLines = StripHTMLUTF8.replace(/\r?\n|\r/g, '')
-                await write_data_pages(link_page, title_page, StripHTMLBreakLines)
+            attachment: {
+              properties: {
+                content: {
+                  type: 'text'
+                }
+              }
             }
-
-            console.log('get_data_from_pages_fin' + new Date().toISOString())
-            }
-    } catch (e) {
-        console.log('Erreur get data from pages ' + e)
-    }
-}
-
-//Get data from pages and medias
-const get_data_from_medias = async () => {
-    console.log('get_data_from_medias_debut' + new Date().toISOString())
-    try {
-
-        for (let site of sites) {
-            console.log(site);
-
-        // loop over each entries to display title
-        let medias = await getMedias(site)
-
-        // loop over each data entries
-        for (let media of medias.data) {
-            //get source of the media
-            let source_media = media.source_url
-
-            if (source_media.match(/\.[^.]*$/g) == '.pdf') {
-                let file_name = source_media.match(/(?<=\/)[^/]*$/g)
-                console.log(`${file_name}`)
-                await convert_files_to_base64(file_name, source_media)
-            } else {
-                console.log('file is not a pdf :' + `${source_media}`)
-            }
+          }
         }
+      }
+    });
 
-            console.log('get_data_from_medias_fin' + new Date().toISOString())
-        }
-    } catch (e) {
-        console.log('Erreur get data from medias' + e)
+    console.log('createInsideTemp_fin' + new Date().toISOString());
+  } catch (e) {
+    console.log('Erreur create inside temp ' + e);
+  }
+};
+
+// Create attachment field
+const createAttachmentField = async () => {
+  console.log('createAttachmentField_debut' + new Date().toISOString());
+  try {
+    axios({
+      method: 'PUT',
+      url: `${url}/_ingest/pipeline/attachment`,
+      data: {
+        description: 'Extract attachment information',
+        processors: [
+          {
+            attachment: {
+              field: 'data'
+            }
+          }
+        ]
+      }
+    });
+    console.log('createAttachmentField_fin' + new Date().toISOString());
+  } catch (e) {
+    console.log('Erreur create attachment field ' + e);
+  }
+};
+
+// Copy inside temp into inside
+const copyInsideTempToInside = async () => {
+  console.log('copyInsideTempToInside_debut' + new Date().toISOString());
+  // Put the inside_temp into inside
+  return axios
+    .post(`${url}/_reindex`, {
+      source: {
+        index: 'inside_temp'
+      },
+      dest: {
+        index: 'inside'
+      }
+    })
+    .then((result) => {
+      console.log(result.data);
+    })
+    .catch((error) => {
+      console.error('Erreur copy temp to inside ' + error);
+    });
+};
+
+// Get data from pages and medias
+const getDataFromPages = async () => {
+  console.log('getDataFromPages_debut' + new Date().toISOString());
+  try {
+    for (const site of sites) {
+      console.log(site);
+      const pages = await getPages(site);
+
+      // loop over each entries to display title
+      for (const page of pages.data) {
+        const linkPage = page.link;
+        const titlePage = page.title.rendered;
+
+        const contentPage = page.content.rendered;
+        const StripHTML = contentPage.replace(/(<([^>]+)>)/gi, '');
+        const StripHTMLUTF8 = htmlEntities.decode(StripHTML);
+        const StripHTMLBreakLines = StripHTMLUTF8.replace(/\r?\n|\r/g, '');
+        await writeDataPages(linkPage, titlePage, StripHTMLBreakLines);
+      }
+
+      console.log('getDataFromPages_fin' + new Date().toISOString());
     }
-}
+  } catch (e) {
+    console.log('Erreur get data from pages ' + e);
+  }
+};
 
-const launch_script = async () => {
-    console.log('launch_script')
-    await delete_inside_temp()
-    //waiting 2 seconds
-    await delay(2000) 
-    await create_inside_temp()
-    await delay(2000)
-    await create_attachment_field()
-    await delay(2000)
-    await get_data_from_pages()
-    await get_data_from_medias()
-    await delay(2000)
-    await delete_inside()
-    await delay(2000)
-    await copy_inside_temp_to_inside()
-}
+// Get data from pages and medias
+const getDataFromMedias = async () => {
+  console.log('getDataFromMedias_debut' + new Date().toISOString());
+  try {
+    for (const site of sites) {
+      console.log(site);
 
-launch_script()
+      // Loop over each entries to display title
+      const medias = await getMedias(site);
+
+      // Loop over each data entries
+      for (const media of medias.data) {
+        // Get source of the media
+        const sourceMedia = media.source_url;
+
+        if (sourceMedia.match(/\.[^.]*$/g) === '.pdf') {
+          const fileName = sourceMedia.match(/(?<=\/)[^/]*$/g);
+          console.log(`${fileName}`);
+          await convertFilesToBase64(fileName, sourceMedia);
+        } else {
+          console.log('file is not a pdf :' + `${sourceMedia}`);
+        }
+      }
+      console.log('getDataFromMedias_fin' + new Date().toISOString());
+    }
+  } catch (e) {
+    console.log('Erreur get data from medias' + e);
+  }
+};
+
+const launchScript = async () => {
+  console.log('launchScript');
+  await deleteInsideTemp();
+  await delay(2000);
+  await createInsideTemp();
+  await delay(2000);
+  await createAttachmentField();
+  await delay(2000);
+  await getDataFromPages();
+  await getDataFromMedias();
+  await delay(2000);
+  await deleteInside();
+  await delay(2000);
+  await copyInsideTempToInside();
+};
+
+launchScript();
