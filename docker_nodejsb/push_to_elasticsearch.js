@@ -250,7 +250,7 @@ const getDataFromMedias = async () => {
         // Get source of the media
         const sourceMedia = media.source_url;
 
-        if (sourceMedia.match(/\.[^.]*$/g) === '.pdf') {
+        if (sourceMedia.endsWith('.pdf')) {
           const fileName = sourceMedia.match(/(?<=\/)[^/]*$/g);
           console.log(`${fileName}`);
           await convertFilesToBase64(fileName, sourceMedia);
