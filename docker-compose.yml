@@ -10,10 +10,11 @@ services:
       - "ES_JAVA_OPTS=-Xms4096m -Xmx4096m"
       - xpack.security.enabled=false
       - "discovery.type=single-node"
+      # - logger.level=WARN
     ports:
       - "9200:9200"
   kibana:
-    image: docker.elastic.co/kibana/kibana:7.11.0
+    image: docker.elastic.co/kibana/kibana:8.2.0
     container_name: search-inside-kibana
     ports:
       - "5601:5601"
