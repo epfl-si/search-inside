@@ -1,20 +1,13 @@
 {
-  "name": "nodejsfrontbackend",
-  "version": "1.0.0",
-  "description": "",
-  "main": "serverf.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon serverf.js"
   },
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "axios": "^0.21.1",
-    "body-parser": "^1.19.0",
-    "express": "^4.17.1",
-    "express-handlebars": "^5.2.1",
-    "nodemon": "^2.0.7",
+    "axios": "^0.27.2",
+    "body-parser": "^1.20.0",
+    "express": "^4.18.1",
+    "express-handlebars": "^6.0.5",
     "path": "^0.12.7"
   }
 }
