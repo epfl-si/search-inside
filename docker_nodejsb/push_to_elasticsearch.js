@@ -3,6 +3,7 @@ const htmlEntities = require('html-entities');
 const request = require('request').defaults({ encoding: null });
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const https = require('https');
+const { convert } = require('html-to-text');
 
 // let url = 'https://searchinside-elastic.epfl.ch'
 const url = 'http://search-inside-elastic:9200';
@@ -216,16 +217,31 @@ const getDataFromPages = async () => {
       console.log(site);
       const pages = await getPages(site);
 
-      // loop over each entries to display title
+      // Loop over each entries
       for (const page of pages.data) {
         const linkPage = page.link;
         const titlePage = page.title.rendered;
+        let contentPage = page.content.rendered;
 
-        const contentPage = page.content.rendered;
-        const StripHTML = contentPage.replace(/(<([^>]+)>)/gi, '');
-        const StripHTMLUTF8 = htmlEntities.decode(StripHTML);
-        const StripHTMLBreakLines = StripHTMLUTF8.replace(/\r?\n|\r/g, '');
-        await writeDataPages(linkPage, titlePage, StripHTMLBreakLines);
+        // Convert HTML to beautiful text
+        contentPage = convert(contentPage, {
+          selectors: [
+            { selector: 'ul', options: { itemPrefix: '· ' } },
+            { selector: 'a', options: { ignoreHref: true } },
+            { selector: 'img', format: 'skip' }
+          ]
+        });
+
+        // Convert HTML entities to characters
+        contentPage = htmlEntities.decode(contentPage);
+        // Replace any whitespace character
+        contentPage = contentPage.replace(/\s/g, ' ');
+        // Fine tune ul rendered
+        contentPage = contentPage.replace(/ +·/g, ' ·');
+        // Delete multiple space
+        contentPage = contentPage.replace(/ +/g, ' ');
+
+        await writeDataPages(linkPage, titlePage, contentPage);
       }
 
       console.log('getDataFromPages_fin' + new Date().toISOString());
