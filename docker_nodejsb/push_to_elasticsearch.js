@@ -10,9 +10,12 @@ const url = 'http://search-inside-elastic:9200';
 
 // Adapt host of inside websites depending where it is running (OS or public)
 let insideHost = 'httpd-inside:8443';
-if (process.env.RUNNING_HOST === 'local') {
+if (process.env.RUNNING_HOST === 'local' || process.env.RUNNING_HOST === 'wwp-test') {
+  console.log("from inside.epfl.ch..")
   insideHost = 'inside.epfl.ch';
 }
+
+console.log("RUNNING_HOST: " + process.env.RUNNING_HOST);
 
 // Sites
 const sites = ['help-wordpress'];
