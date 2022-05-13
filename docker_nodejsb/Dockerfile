@@ -1,4 +1,4 @@
-FROM node:16-alpine
+FROM docker-registry.default.svc:5000/wwp-test/node:16-alpine
 WORKDIR /app
 COPY package.json ./
 COPY package-lock.json ./
