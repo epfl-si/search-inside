@@ -5,17 +5,16 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const https = require('https');
 const { convert } = require('html-to-text');
 
-// let url = 'https://searchinside-elastic.epfl.ch'
 const url = 'http://search-inside-elastic:9200';
+let sites = ['ae', 'chili', 'cipd', 'corp-id', 'help-wordpress', 'ic', 'internalhr', 'lcbc', 'library', 'lrm',
+  'lts4', 'sti-it', 'sti-ta', 'sv-it', 'teaching'];
 
-// Adapt host of inside websites depending where it is running (OS or public)
+// Adapt host of inside websites and websites to include, depending where it is running (OS or public)
 let insideHost = 'httpd-inside:8443';
 if (process.env.RUNNING_HOST === 'local' || process.env.RUNNING_HOST === 'wwp-test') {
   insideHost = 'inside.epfl.ch';
+  sites = ['help-wordpress'];
 }
-
-// Sites
-const sites = ['help-wordpress'];
 
 // Read url and write the content of pages in elasticsearch
 const getPages = async (site) => {
