@@ -219,7 +219,8 @@ const getDataFromPages = async () => {
       // Loop over each entries
       for (const page of pages.data) {
         const linkPage = page.link;
-        const titlePage = page.title.rendered;
+        const titlePage = htmlEntities.decode(page.title.rendered);
+
         let contentPage = page.content.rendered;
 
         // Convert HTML to beautiful text
@@ -227,7 +228,15 @@ const getDataFromPages = async () => {
           selectors: [
             { selector: 'ul', options: { itemPrefix: '· ' } },
             { selector: 'a', options: { ignoreHref: true } },
-            { selector: 'img', format: 'skip' }
+            { selector: 'img', format: 'skip' },
+            { selector: 'h1', format: 'block' },
+            { selector: 'h2', format: 'block' },
+            { selector: 'h3', format: 'block' },
+            { selector: 'h4', format: 'block' },
+            { selector: 'h5', format: 'block' },
+            { selector: 'h6', format: 'block' },
+            { selector: 'th', format: 'block' },
+            { selector: 'td', format: 'block' }
           ]
         });
 
