@@ -73,7 +73,7 @@
                 value: 'false'
               - name: 'discovery.type'
                 value: 'single-node'
-              image: 'docker-registry.default.svc:5000/{{ openshift_namespace }}/search-inside-elastic:latest'
+              image: 'docker-registry.default.svc:5000/{{ openshift_namespace }}/search-inside-elastic:{{ searchinside_image_tag }}'
               imagePullPolicy: Always
               name: search-inside-elastic
           dnsPolicy: ClusterFirst
@@ -88,7 +88,7 @@
               - search-inside-elastic
             from:
               kind: ImageStreamTag
-              name: 'search-inside-elastic:latest'
+              name: 'search-inside-elastic:{{ searchinside_image_tag }}'
               namespace: "{{ openshift_namespace }}"
 
 - name: Elastic - Service
@@ -131,7 +131,7 @@
                 value: 'http://search-inside-elastic.{{ openshift_namespace }}.svc:9200'
               - name: 'ELASTICSEARCH_HOSTS'
                 value: 'http://search-inside-elastic.{{ openshift_namespace }}.svc:9200'
-              image: 'docker-registry.default.svc:5000/{{ openshift_namespace }}/search-inside-kibana:latest'
+              image: 'docker-registry.default.svc:5000/{{ openshift_namespace }}/search-inside-kibana:{{ searchinside_image_tag }}'
               imagePullPolicy: Always
               name: search-inside-kibana
           dnsPolicy: ClusterFirst
@@ -146,7 +146,7 @@
               - search-inside-kibana
             from:
               kind: ImageStreamTag
-              name: 'search-inside-kibana:latest'
+              name: 'search-inside-kibana:{{ searchinside_image_tag }}'
               namespace: "{{ openshift_namespace }}"
 
 - name: Kibana - Service
@@ -228,7 +228,7 @@
                 value: 'http://search-inside-elastic.{{ openshift_namespace }}.svc:9200'
               - name: 'RUNNING_HOST'
                 value: "{{ openshift_namespace }}"
-              image: 'docker-registry.default.svc:5000/{{ openshift_namespace }}/search-inside-nodejsb:latest'
+              image: 'docker-registry.default.svc:5000/{{ openshift_namespace }}/search-inside-nodejsb:{{ searchinside_image_tag }}'
               imagePullPolicy: Always
               name: search-inside-nodejsb
               resources: {}
@@ -244,7 +244,7 @@
               - search-inside-nodejsb
             from:
               kind: ImageStreamTag
-              name: 'search-inside-nodejsb:latest'
+              name: 'search-inside-nodejsb:{{ searchinside_image_tag }}'
               namespace: "{{ openshift_namespace }}"
 
 - name: NodeJS backend - Service
@@ -313,7 +313,7 @@
                 value: 'http://search-inside-elastic.{{ openshift_namespace }}.svc:9200'
               - name: 'ELASTICSEARCH_HOSTS'
                 value: 'http://search-inside-elastic.{{ openshift_namespace }}.svc:9200'
-              image: 'docker-registry.default.svc:5000/{{ openshift_namespace }}/search-inside-nodejsf:latest'
+              image: 'docker-registry.default.svc:5000/{{ openshift_namespace }}/search-inside-nodejsf:{{ searchinside_image_tag }}'
               imagePullPolicy: Always
               name: search-inside-nodejsf
           dnsPolicy: ClusterFirst
@@ -328,7 +328,7 @@
               - search-inside-nodejsf
             from:
               kind: ImageStreamTag
-              name: 'search-inside-nodejsf:latest'
+              name: 'search-inside-nodejsf:{{ searchinside_image_tag }}'
               namespace: "{{ openshift_namespace }}"
 
 - name: NodeJS frontend - Service
@@ -347,3 +347,16 @@
           targetPort: "{{ searchinside_nodejsf_port }}"
       selector:
         deployment-config.name: search-inside-nodejsf
+
+- name: Promote wwp-test search-inside-* images to wwp
+  when: >-
+    openshift_is_production and
+    ("images.promote" in ansible_run_tags)
+  local_action:
+    module: shell
+    cmd: |
+      oc tag wwp-test/search-inside-elastic:latest wwp/search-inside-elastic:prod
+      oc tag wwp-test/search-inside-kibana:latest wwp/search-inside-kibana:prod
+      oc tag wwp-test/search-inside-nodejsb:latest wwp/search-inside-nodejsb:prod
+      oc tag wwp-test/search-inside-nodejsf:latest wwp/search-inside-nodejsf:prod
+  tags: images.promote
