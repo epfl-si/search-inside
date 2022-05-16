@@ -1,133 +1,64 @@
-- name: Search inside elastic Image Stream
-  openshift:
+- name: Elastic - Image Stream
+  when: >-
+    openshift_namespace == "wwp-test"
+  openshift_imagestream:
     state: latest
-    apiVersion: v1
-    kind: ImageStream
     metadata:
+      namespace: "{{ openshift_namespace }}"
       name: search-inside-elastic
-      namespace: "{{openshift_namespace}}"
-      labels:
-        build: search-inside-elastic
-    spec:
-      lookupPolicy:
-        local: false
-      tags:
-        - annotations: null
-          from:
-            kind: DockerImage
-            name: 'search-inside-elastic:latest'
-          generation: 3
-          importPolicy: {}
-          name: latest
-          referencePolicy:
-            type: Source
-
-- name: Search inside elastic Build Config
-  openshift:
-    state: latest
-    apiVersion: v1
-    kind: BuildConfig
-    metadata:
-      name: search-inside-elastic
-      namespace: "{{openshift_namespace}}"
-      labels:
-        build: search-inside-elastic
-    spec:
-      output:
-        to:
-          kind: ImageStreamTag
-          name: 'search-inside-elastic:latest'
-      runPolicy: Serial
-      source:
-        git:
-          uri: "https://github.com/epfl-si/search-inside"
-        contextDir: "docker_elasticsearch"
-      strategy:
-        dockerStrategy:
-          forcePull: true
-          noCache: true
-        type: Docker
+    git:
+      repository: "{{ searchinside_git_uri }}"
+      path: docker_elasticsearch
   register: _openshift_image_search_inside_elastic
 
-- name: "Rebuild search inside elastic image now"
-  when: _openshift_image_search_inside_elastic is changed
-  shell: "oc -n {{openshift_namespace}} start-build --wait search-inside-elastic"
+- name: Elastic - Rebuild image
+  when:
+    - >
+      ( (_openshift_image_search_inside_elastic | default({})) is changed )
+      or
+      "elastic.rebuild" in ansible_run_tags
+    - >-
+      openshift_namespace == "wwp-test"
+  shell: "oc -n {{ openshift_namespace }} start-build --wait search-inside-elastic"
   delegate_to: localhost
+  tags:
+    - elastic.rebuild
 
-- name: Search inside kibana Image Stream
-  openshift:
-    state: latest
-    apiVersion: v1
-    kind: ImageStream
+- name: Kibana - Image Stream
+  when: >-
+    openshift_namespace == "wwp-test"
+  openshift_imagestream:
     metadata:
       name: search-inside-kibana
-      namespace: "{{openshift_namespace}}"
-      labels:
-        build: search-inside-kibana
-    spec:
-      lookupPolicy:
-        local: false
-      tags:
-        - annotations: null
-          from:
-            kind: DockerImage
-            name: 'search-inside-kibana:latest'
-          generation: 3
-          importPolicy: {}
-          name: latest
-          referencePolicy:
-            type: Source
-
-- name: Search inside Kibana Build Config
-  openshift:
-    state: latest
-    apiVersion: v1
-    kind: BuildConfig
-    metadata:
-      name: search-inside-kibana
-      namespace: "{{openshift_namespace}}"
-      labels:
-        build: search-inside
-    spec:
-      output:
-        to:
-          kind: ImageStreamTag
-          name: 'search-inside-kibana:latest'
-      source:
-        dockerfile: |
-          FROM docker.elastic.co/kibana/kibana:8.2.0
-      strategy:
-        dockerStrategy:
-          forcePull: true
-          noCache: true
+      namespace: "{{ openshift_namespace }}"
+    tag: 8.2.0
+    from: docker.elastic.co/kibana/kibana:8.2.0
   register: _openshift_image_search_inside_kibana
 
-- name: "Rebuild search inside kibana image now"
-  when: _openshift_image_search_inside_kibana is changed
-  shell: "oc -n {{openshift_namespace}} start-build --wait search-inside-kibana"
+- name: Kibana - Rebuild image
+  when:
+    - >
+      ( (_openshift_image_search_inside_kibana | default({})) is changed )
+      or
+      "kibana.rebuild" in ansible_run_tags
+    - >-
+      openshift_namespace == "wwp-test"
+  shell: "oc -n {{ openshift_namespace }} start-build --wait search-inside-kibana"
   delegate_to: localhost
+  tags:
+    - kibana.rebuild
 
-- name: search-inside-elastic Deployment Config
+- name: Elastic - Deployment Config
   openshift:
     apiVersion: apps.openshift.io/v1
     kind: DeploymentConfig
     metadata:
       name: search-inside-elastic
-      namespace: "{{openshift_namespace}}"
+      namespace: "{{ openshift_namespace }}"
     spec:
       replicas: 1
       selector:
         deployment-config.name: search-inside-elastic
-      strategy:
-        activeDeadlineSeconds: 21600
-        resources: { }
-        rollingParams:
-          intervalSeconds: 1
-          maxSurge: 25%
-          maxUnavailable: 25%
-          timeoutSeconds: 600
-          updatePeriodSeconds: 1
-        type: Rolling
       template:
         metadata:
           creationTimestamp: null
@@ -138,38 +69,36 @@
             - env:
               - name: 'ES_JAVA_OPTS'
                 value: '-Xms4096m -Xmx4096m'
+              - name: 'xpack.security.enabled'
+                value: 'false'
               - name: 'discovery.type'
                 value: 'single-node'
-              image: 'docker-registry.default.svc:5000/{{openshift_namespace}}/search-inside-elastic:latest'
+              image: 'docker-registry.default.svc:5000/{{ openshift_namespace }}/search-inside-elastic:latest'
               imagePullPolicy: Always
               name: search-inside-elastic
-              resources: {}
-              terminationMessagePath: /dev/termination-log
-              terminationMessagePolicy: File
-        dnsPolicy: ClusterFirst
-        restartPolicy: Always
-        schedulerName: default-scheduler
-        securityContext: { }
-        terminationGracePeriodSeconds: 30
+          dnsPolicy: ClusterFirst
+          restartPolicy: Always
+          schedulerName: default-scheduler
+          terminationGracePeriodSeconds: 30
       triggers:
-      - type: ImageChange
-        imageChangeParams:
-          automatic: true
-          containerNames:
-          - search-inside-elastic
-          from:
-            kind: ImageStreamTag
-            name: 'search-inside-elastic:latest'
-            namespace: "{{openshift_namespace}}"
+        - type: ImageChange
+          imageChangeParams:
+            automatic: true
+            containerNames:
+              - search-inside-elastic
+            from:
+              kind: ImageStreamTag
+              name: 'search-inside-elastic:latest'
+              namespace: "{{ openshift_namespace }}"
 
-- name: search-inside-elastic Service
+- name: Elastic - Service
   openshift:
     state: latest
     apiVersion: v1
     kind: Service
     metadata:
       name: "{{ searchinside_elastic_servicename }}"
-      namespace: "{{openshift_namespace}}"
+      namespace: "{{ openshift_namespace }}"
     spec:
       type: ClusterIP
       ports:
@@ -179,27 +108,17 @@
       selector:
         deployment-config.name: search-inside-elastic
 
-- name: search-inside-kibana Deployment Config
+- name: Kibana - Deployment Config
   openshift:
     apiVersion: apps.openshift.io/v1
     kind: DeploymentConfig
     metadata:
       name: search-inside-kibana
-      namespace: "{{openshift_namespace}}"
+      namespace: "{{ openshift_namespace }}"
     spec:
       replicas: 1
       selector:
         deployment-config.name: search-inside-kibana
-      strategy:
-        activeDeadlineSeconds: 21600
-        resources: { }
-        rollingParams:
-          intervalSeconds: 1
-          maxSurge: 25%
-          maxUnavailable: 25%
-          timeoutSeconds: 600
-          updatePeriodSeconds: 1
-        type: Rolling
       template:
         metadata:
           creationTimestamp: null
@@ -209,37 +128,35 @@
           containers:
             - env:
               - name: 'ELASTICSEARCH_URL'
-                value: 'http://search-inside-elastic.{{openshift_namespace}}.svc:9200'
+                value: 'http://search-inside-elastic.{{ openshift_namespace }}.svc:9200'
               - name: 'ELASTICSEARCH_HOSTS'
-                value: 'http://search-inside-elastic.{{openshift_namespace}}.svc:9200'
-              image: 'docker-registry.default.svc:5000/{{openshift_namespace}}/search-inside-kibana:latest'
+                value: 'http://search-inside-elastic.{{ openshift_namespace }}.svc:9200'
+              image: 'docker-registry.default.svc:5000/{{ openshift_namespace }}/search-inside-kibana:latest'
               imagePullPolicy: Always
               name: search-inside-kibana
-              resources: {}
-        dnsPolicy: ClusterFirst
-        restartPolicy: Always
-        schedulerName: default-scheduler
-        securityContext: { }
-        terminationGracePeriodSeconds: 30
+          dnsPolicy: ClusterFirst
+          restartPolicy: Always
+          schedulerName: default-scheduler
+          terminationGracePeriodSeconds: 30
       triggers:
-      - type: ImageChange
-        imageChangeParams:
-          automatic: true
-          containerNames:
-          - search-inside-kibana
-          from:
-            kind: ImageStreamTag
-            name: 'search-inside-kibana:latest'
-            namespace: "{{openshift_namespace}}"
+        - type: ImageChange
+          imageChangeParams:
+            automatic: true
+            containerNames:
+              - search-inside-kibana
+            from:
+              kind: ImageStreamTag
+              name: 'search-inside-kibana:latest'
+              namespace: "{{ openshift_namespace }}"
 
-- name: search-inside-kibana Service
+- name: Kibana - Service
   openshift:
     state: latest
     apiVersion: v1
     kind: Service
     metadata:
       name: "{{ searchinside_kibana_servicename }}"
-      namespace: "{{openshift_namespace}}"
+      namespace: "{{ openshift_namespace }}"
     spec:
       type: ClusterIP
       ports:
@@ -249,78 +166,54 @@
       selector:
         deployment-config.name: search-inside-kibana
 
-- name: Search inside nodejs_backend Image Stream
-  openshift:
-    state: latest
-    apiVersion: v1
-    kind: ImageStream
+- name: "Pull {{ nodejs_base_image_mirrored_from }} into {{ nodejs_base_image_mirrored_to }}"
+  when: >-
+    openshift_namespace == "wwp-test"
+  delegate_to: localhost
+  openshift_imagestream:
     metadata:
-      name: search-inside-nodejsb
-      namespace: "{{openshift_namespace}}"
-      labels:
-        build: search-inside-nodejsb
-    spec:
-      lookupPolicy:
-        local: false
-      tags:
-        - annotations: null
-          from:
-            kind: DockerImage
-            name: 'search-inside-nodejsb:latest'
-          generation: 3
-          importPolicy: {}
-          name: latest
-          referencePolicy:
-            type: Source
+      name: "{{ nodejs_base_image_name }}"
+      namespace: "{{ openshift_namespace }}"
+    from: "{{ nodejs_base_image_mirrored_from }}"
+    tag: "{{ nodejs_base_image_tag }}"
 
-- name: Search inside nodejs_backend Build Config
-  openshift:
+- name: NodeJS backend - Image Stream
+  when: >-
+    openshift_namespace == "wwp-test"
+  openshift_imagestream:
     state: latest
-    apiVersion: v1
-    kind: BuildConfig
     metadata:
+      namespace: "{{ openshift_namespace }}"
       name: search-inside-nodejsb
-      namespace: "{{openshift_namespace}}"
-      labels:
-        build: search-inside-nodejsb
-    spec:
-      output:
-        to:
-          kind: ImageStreamTag
-          name: 'search-inside-nodejsb:latest'
-      runPolicy: Serial
-      source:
-        git:
-          uri: "https://github.com/epfl-si/search-inside"
-        contextDir: "docker_nodejsb"
-      strategy:
-        dockerStrategy:
-          forcePull: true
-          noCache: true
-        type: Docker
+    git:
+      repository: "{{ searchinside_git_uri }}"
+      path: docker_nodejsb
   register: _openshift_image_search_inside_nodejsb
- 
-- name: search-inside-nodejsb Deployment Config
+
+- name: NodeJS backend - Rebuild image
+  when:
+    - >
+      ( (_openshift_image_search_inside_nodejsb | default({})) is changed )
+      or
+      "nodejsb.rebuild" in ansible_run_tags
+    - >-
+      openshift_namespace == "wwp-test"
+  shell: "oc -n {{ openshift_namespace }} start-build --wait search-inside-nodejsb"
+  delegate_to: localhost
+  tags:
+    - nodejsb.rebuild
+
+- name: NodeJS backend - Deployment Config
   openshift:
     apiVersion: apps.openshift.io/v1
     kind: DeploymentConfig
     metadata:
       name: search-inside-nodejsb
-      namespace: "{{openshift_namespace}}"
+      namespace: "{{ openshift_namespace }}"
     spec:
       replicas: 1
       selector:
         deployment-config.name: search-inside-nodejsb
-      strategy:
-        activeDeadlineSeconds: 21600
-        resources: { }
-        rollingParams:
-          intervalSeconds: 1
-          maxSurge: 25%
-          maxUnavailable: 25%
-          timeoutSeconds: 600
-          updatePeriodSeconds: 1
-        type: Rolling
       template:
         metadata:
           creationTimestamp: null
@@ -330,37 +223,38 @@
           containers:
             - env:
               - name: 'ELASTICSEARCH_URL'
-                value: 'http://search-inside-elastic.{{openshift_namespace}}.svc:9200'
+                value: 'http://search-inside-elastic.{{ openshift_namespace }}.svc:9200'
               - name: 'ELASTICSEARCH_HOSTS'
-                value: 'http://search-inside-elastic.{{openshift_namespace}}.svc:9200'
-              image: 'docker-registry.default.svc:5000/{{openshift_namespace}}/search-inside-nodejsb:latest'
+                value: 'http://search-inside-elastic.{{ openshift_namespace }}.svc:9200'
+              - name: 'RUNNING_HOST'
+                value: "{{ openshift_namespace }}"
+              image: 'docker-registry.default.svc:5000/{{ openshift_namespace }}/search-inside-nodejsb:latest'
               imagePullPolicy: Always
               name: search-inside-nodejsb
               resources: {}
-        dnsPolicy: ClusterFirst
-        restartPolicy: Always
-        schedulerName: default-scheduler
-        securityContext: { }
-        terminationGracePeriodSeconds: 30
+          dnsPolicy: ClusterFirst
+          restartPolicy: Always
+          schedulerName: default-scheduler
+          terminationGracePeriodSeconds: 30
       triggers:
-      - type: ImageChange
-        imageChangeParams:
-          automatic: true
-          containerNames:
-          - search-inside-nodejsb
-          from:
-            kind: ImageStreamTag
-            name: 'search-inside-nodejsb:latest'
-            namespace: "{{openshift_namespace}}"
+        - type: ImageChange
+          imageChangeParams:
+            automatic: true
+            containerNames:
+              - search-inside-nodejsb
+            from:
+              kind: ImageStreamTag
+              name: 'search-inside-nodejsb:latest'
+              namespace: "{{ openshift_namespace }}"
 
-- name: search-nodejs-backend Service
+- name: NodeJS backend - Service
   openshift:
     state: latest
     apiVersion: v1
     kind: Service
     metadata:
       name: "{{ searchinside_nodejsb_servicename }}"
-      namespace: "{{openshift_namespace}}"
+      namespace: "{{ openshift_namespace }}"
     spec:
       type: ClusterIP
       ports:
@@ -370,78 +264,43 @@
       selector:
         deployment-config.name: search-inside-nodejsb
 
-- name: Search inside nodejs_frontend Image Stream
-  openshift:
+- name: NodeJS frontend - Image Stream
+  when: >-
+    openshift_namespace == "wwp-test"
+  openshift_imagestream:
     state: latest
-    apiVersion: v1
-    kind: ImageStream
     metadata:
+      namespace: "{{ openshift_namespace }}"
       name: search-inside-nodejsf
-      namespace: "{{openshift_namespace}}"
-      labels:
-        build: search-inside-nodejsf
-    spec:
-      lookupPolicy:
-        local: false
-      tags:
-        - annotations: null
-          from:
-            kind: DockerImage
-            name: 'search-inside-nodejsf:latest'
-          generation: 3
-          importPolicy: {}
-          name: latest
-          referencePolicy:
-            type: Source
-
-- name: Search inside nodejs_frontend Build Config
-  openshift:
-    state: latest
-    apiVersion: v1
-    kind: BuildConfig
-    metadata:
-      name: search-inside-nodejsf
-      namespace: "{{openshift_namespace}}"
-      labels:
-        build: search-inside-nodejsf
-    spec:
-      output:
-        to:
-          kind: ImageStreamTag
-          name: 'search-inside-nodejsf:latest'
-      runPolicy: Serial
-      source:
-        git:
-          uri: "https://github.com/epfl-si/search_inside"
-        contextDir: "docker_nodejsf"
-      strategy:
-        dockerStrategy:
-          forcePull: true
-          noCache: true
-        type: Docker
+    git:
+      repository: "{{ searchinside_git_uri }}"
+      path: docker_nodejsf
   register: _openshift_image_search_inside_nodejsf
 
-- name: search-inside-nodejsf Deployment Config
+- name: NodeJS frontend - Rebuild image
+  when:
+    - >
+      ( (_openshift_image_search_inside_nodejsf | default({})) is changed )
+      or
+      "nodejsf.rebuild" in ansible_run_tags
+    - >-
+      openshift_namespace == "wwp-test"
+  shell: "oc -n {{ openshift_namespace }} start-build --wait search-inside-nodejsf"
+  delegate_to: localhost
+  tags:
+    - nodejsf.rebuild
+
+- name: NodeJS frontend - Deployment Config
   openshift:
     apiVersion: apps.openshift.io/v1
     kind: DeploymentConfig
     metadata:
       name: search-inside-nodejsf
-      namespace: "{{openshift_namespace}}"
+      namespace: "{{ openshift_namespace }}"
     spec:
       replicas: 1
       selector:
         deployment-config.name: search-inside-nodejsf
-      strategy:
-        activeDeadlineSeconds: 21600
-        resources: { }
-        rollingParams:
-          intervalSeconds: 1
-          maxSurge: 25%
-          maxUnavailable: 25%
-          timeoutSeconds: 600
-          updatePeriodSeconds: 1
-        type: Rolling
       template:
         metadata:
           creationTimestamp: null
@@ -451,37 +310,35 @@
           containers:
             - env:
               - name: 'ELASTICSEARCH_URL'
-                value: 'http://search-inside-elastic.{{openshift_namespace}}.svc:9200'
+                value: 'http://search-inside-elastic.{{ openshift_namespace }}.svc:9200'
               - name: 'ELASTICSEARCH_HOSTS'
-                value: 'http://search-inside-elastic.{{openshift_namespace}}.svc:9200'
-              image: 'docker-registry.default.svc:5000/{{openshift_namespace}}/search-inside-nodejsf:latest'
+                value: 'http://search-inside-elastic.{{ openshift_namespace }}.svc:9200'
+              image: 'docker-registry.default.svc:5000/{{ openshift_namespace }}/search-inside-nodejsf:latest'
               imagePullPolicy: Always
               name: search-inside-nodejsf
-              resources: {}
-        dnsPolicy: ClusterFirst
-        restartPolicy: Always
-        schedulerName: default-scheduler
-        securityContext: { }
-        terminationGracePeriodSeconds: 30
+          dnsPolicy: ClusterFirst
+          restartPolicy: Always
+          schedulerName: default-scheduler
+          terminationGracePeriodSeconds: 30
       triggers:
-      - type: ImageChange
-        imageChangeParams:
-          automatic: true
-          containerNames:
-          - search-inside-nodejsf
-          from:
-            kind: ImageStreamTag
-            name: 'search-inside-nodejsf:latest'
-            namespace: "{{openshift_namespace}}"
+        - type: ImageChange
+          imageChangeParams:
+            automatic: true
+            containerNames:
+              - search-inside-nodejsf
+            from:
+              kind: ImageStreamTag
+              name: 'search-inside-nodejsf:latest'
+              namespace: "{{ openshift_namespace }}"
 
-- name: search-nodejs-frontend Service
+- name: NodeJS frontend - Service
   openshift:
     state: latest
     apiVersion: v1
     kind: Service
     metadata:
       name: "{{ searchinside_nodejsf_servicename }}"
-      namespace: "{{openshift_namespace}}"
+      namespace: "{{ openshift_namespace }}"
     spec:
       type: ClusterIP
       ports:
@@ -490,4 +347,3 @@
           targetPort: "{{ searchinside_nodejsf_port }}"
       selector:
         deployment-config.name: search-inside-nodejsf
-

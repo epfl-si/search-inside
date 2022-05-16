@@ -1,5 +1,4 @@
----
-# vars file for epfl.infoscience-exports
+searchinside_git_uri: https://github.com/epfl-si/search-inside
 searchinside_elastic_port: 9200
 searchinside_kibana_port: 5601
 searchinside_nodejsb_port: 5602
@@ -8,4 +7,8 @@ searchinside_elastic_servicename: "search-inside-elastic"
 searchinside_kibana_servicename: "search-inside-kibana"
 searchinside_nodejsb_servicename: "search-inside-nodejsb"
 searchinside_nodejsf_servicename: "search-inside-nodejsf"
-
+nodejs_base_image_name: node
+nodejs_base_image_tag: 16-alpine
+nodejs_base_image: "{{ nodejs_base_image_name }}:{{ nodejs_base_image_tag }}"
+nodejs_base_image_mirrored_from: "docker.io/{{ nodejs_base_image }}"
+nodejs_base_image_mirrored_to: "docker-registry.default.svc:5000/wwp-test/{{ nodejs_base_image }}"
