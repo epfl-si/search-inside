@@ -7,12 +7,14 @@ help:
 	@echo "Main:"
 	@echo "  make help                  — Display this help"
 	@echo "Utilities:"
-	@echo "  make set-dockerfiles-dev   — Prepare Dockerfiles for local dev (For use another node base image path)"
 	@echo "  make build                 — Build"
 	@echo "  make build-force           — Force build"
 	@echo "  make up                    — Run"
 
-.PHONY: set-dockerfile-dev
+init-elastic-data-dir:
+	@mkdir -p .elastic_data
+	@chmod 777 .elastic_data
+
 set-dockerfile-dev:
 	@cp docker_nodejsb/Dockerfile docker_nodejsb/Dockerfile-dev
 	@sed -i 's#docker-registry.default.svc:5000/wwp-test/##g' docker_nodejsb/Dockerfile-dev
@@ -28,5 +30,5 @@ build-force: set-dockerfile-dev
 	@docker-compose build --force-rm --no-cache --pull
 
 .PHONY: up
-up:
+up: init-elastic-data-dir
 	@docker-compose up

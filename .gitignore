@@ -110,3 +110,6 @@ dist
 
 # Docker
 Dockerfile-dev
+
+# Elastic /data
+.elastic_data/
