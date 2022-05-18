@@ -55,7 +55,7 @@ const convertFilesToBase64 = async (fileName, sourceMedia) => {
   console.log('convertFilesToBase64_debut ' + fileName + new Date().toISOString());
   try {
     const sourceMediaTmp = sourceMedia.replace(/inside.epfl.ch/, insideHost);
-    request.get(`${sourceMediaTmp}`, async (error, response, body) => {
+    request.get(`${sourceMediaTmp}`, { rejectUnauthorized: false }, async (error, response, body) => {
       if (error) {
         console.log('Error get sourceMedia: ' + error);
       } else {
