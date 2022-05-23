@@ -175,7 +175,9 @@ const createAttachmentField = async () => {
         processors: [
           {
             attachment: {
-              field: 'data'
+              field: 'data',
+              remove_binary: true,
+              properties: ['content', 'title', 'content_type', 'language', 'content_length']
             }
           }
         ]
