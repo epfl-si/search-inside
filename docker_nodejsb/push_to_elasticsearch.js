@@ -6,7 +6,7 @@ const { convert } = require('html-to-text');
 
 const url = 'http://search-inside-elastic:9200';
 let sites = ['ae', 'chili', 'cipd', 'corp-id', 'help-wordpress', 'ic', 'internalhr', 'lcbc', 'library', 'lrm',
-  'lts4'];
+  'lts4', 'sti-it', 'sti-ta', 'sv-it', 'teaching'];
 
 // Adapt host of inside websites and websites to include, depending where it is running (OS or public)
 let insideHost = 'httpd-inside:8443';
@@ -299,8 +299,9 @@ const launchScript = async () => {
   await getDataFromMedias();
   await delay(2000);
   await deleteInside();
-  await delay(2000);
   await copyInsideTempToInside();
+  await delay(2000);
+  await deleteInsideTemp();
 };
 
 launchScript();
