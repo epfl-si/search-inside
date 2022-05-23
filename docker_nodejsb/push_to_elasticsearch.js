@@ -77,7 +77,7 @@ const indexMedia = async (fileName, sourceMedia) => {
       title: `${fileName}`,
       data: `${data}`,
       rights: 'test'
-    })
+    }, { maxBodyLength: Infinity })
       .catch((error) => {
         console.log('ERROR POST attachment: ' + error);
       });
