@@ -272,7 +272,7 @@ const getDataFromMedias = async () => {
         // Get source of the media
         const sourceMedia = media.source_url;
 
-        if (sourceMedia.endsWith('.pdf')) {
+        if (media.mime_type === 'application/pdf') {
           const fileName = sourceMedia.match(/(?<=\/)[^/]*$/g);
           console.log(`${fileName}`);
           await indexMedia(fileName, sourceMedia);
