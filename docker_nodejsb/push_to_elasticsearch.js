@@ -1,6 +1,5 @@
 const axios = require('axios');
 const htmlEntities = require('html-entities');
-const request = require('request').defaults({ encoding: null });
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const https = require('https');
 const { convert } = require('html-to-text');
@@ -50,40 +49,46 @@ const getMedias = async (site) => {
     });
 };
 
-// Convert file to base64
-const convertFilesToBase64 = async (fileName, sourceMedia) => {
-  console.log('convertFilesToBase64_debut ' + fileName + new Date().toISOString());
+// Get media in base64 encoded string
+const getMediaBase64 = (url) => {
+  const agent = new https.Agent({ rejectUnauthorized: false });
+
+  return axios
+    .get(url, {
+      responseType: 'arraybuffer', httpsAgent: agent, headers: { Host: 'inside.epfl.ch' }
+    })
+    .then(response => Buffer.from(response.data, 'binary').toString('base64'))
+    .catch((error) => {
+      console.log('Error getMediaBase64: ' + error);
+    });
+};
+
+// Index a media (pdf only for the moment)
+const indexMedia = async (fileName, sourceMedia) => {
+  console.log('indexMedia_debut ' + fileName + new Date().toISOString());
 
   try {
     const sourceMediaTmp = sourceMedia.replace(/inside.epfl.ch/, insideHost);
-    console.log('Get pdf from: ' + sourceMediaTmp);
-    request.get(`${sourceMediaTmp}`, {
-      rejectUnauthorized: false, headers: { Host: 'inside.epfl.ch' }
-    }, async (error, response, body) => {
-      if (error) {
-        console.log('Error get sourceMedia: ' + error);
-      } else {
-        const data = Buffer.from(body).toString('base64');
-        axios({
-          method: 'POST',
-          url: `${url}/inside_temp/_doc?pipeline=attachment`,
-          data: {
-            url: `${sourceMedia}`,
-            rights: 'test',
-            data: `${data}`
-          }
-        });
-      }
-    });
 
-    console.log('convertFilesToBase64_fin ' + fileName + new Date().toISOString());
+    const data = await getMediaBase64(sourceMediaTmp);
+
+    axios.post(`${url}/inside_temp/_doc?pipeline=attachment`, {
+      url: `${sourceMedia}`,
+      title: `${fileName}`,
+      data: `${data}`,
+      rights: 'test'
+    })
+      .catch((error) => {
+        console.log('ERROR POST attachment: ' + error);
+      });
+
+    console.log('indexMedia_fin ' + fileName + new Date().toISOString());
   } catch (e) {
-    console.log('Erreur base64 ' + e);
+    console.log('ERROR indexMedia: ' + e);
   }
 };
 
 const writeDataPages = async (linkPage, titlePage, StripHTMLBreakLines) => {
-  console.log('writeDataPages_debut ' + titlePage + new Date().toISOString());
   try {
     // Write the data into elasticsearch
     axios({
@@ -96,8 +101,6 @@ const writeDataPages = async (linkPage, titlePage, StripHTMLBreakLines) => {
         rights: 'test'
       }
     });
-
-    console.log('writeDataPages_fin ' + titlePage + new Date().toISOString());
   } catch (e) {
     console.log('Erreur write data pages ' + e);
   }
@@ -119,9 +122,6 @@ const deleteInside = async () => {
   console.log('deleteInside_debut' + new Date().toISOString());
   return axios
     .delete(`${url}/inside`)
-    .then((result) => {
-      console.log(result.status);
-    })
     .catch((error) => {
       console.error('Erreur delete inside ' + error);
     });
@@ -129,7 +129,6 @@ const deleteInside = async () => {
 
 // Create inside temp
 const createInsideTemp = async () => {
-  console.log('createInsideTemp_debut' + new Date().toISOString());
   try {
     axios({
       method: 'PUT',
@@ -160,8 +159,6 @@ const createInsideTemp = async () => {
         }
       }
     });
-
-    console.log('createInsideTemp_fin' + new Date().toISOString());
   } catch (e) {
     console.log('Erreur create inside temp ' + e);
   }
@@ -169,7 +166,6 @@ const createInsideTemp = async () => {
 
 // Create attachment field
 const createAttachmentField = async () => {
-  console.log('createAttachmentField_debut' + new Date().toISOString());
   try {
     axios({
       method: 'PUT',
@@ -185,7 +181,6 @@ const createAttachmentField = async () => {
         ]
       }
     });
-    console.log('createAttachmentField_fin' + new Date().toISOString());
   } catch (e) {
     console.log('Erreur create attachment field ' + e);
   }
@@ -217,7 +212,6 @@ const getDataFromPages = async () => {
   console.log('getDataFromPages_debut' + new Date().toISOString());
   try {
     for (const site of sites) {
-      console.log(site);
       const pages = await getPages(site);
 
       // Loop over each entries
@@ -281,7 +275,7 @@ const getDataFromMedias = async () => {
         if (sourceMedia.endsWith('.pdf')) {
           const fileName = sourceMedia.match(/(?<=\/)[^/]*$/g);
           console.log(`${fileName}`);
-          await convertFilesToBase64(fileName, sourceMedia);
+          await indexMedia(fileName, sourceMedia);
         } else {
           console.log('file is not a pdf :' + `${sourceMedia}`);
         }
