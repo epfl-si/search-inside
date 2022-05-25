@@ -40,6 +40,17 @@ services:
     volumes:
       - ./docker_nodejsb/wait-for.sh:/app/wait-for.sh
       - ./docker_nodejsb/push_to_elasticsearch.js:/app/push_to_elasticsearch.js
+  nodeapi:
+    build:
+      context: ./docker_nodeapi
+      dockerfile: Dockerfile
+    container_name: search-inside-nodeapi
+    ports:
+      - "4444:4444"
+    depends_on:
+      - elastic
+    volumes:
+      - ./docker_nodeapi/serverapi.js:/app/serverapi.js
   nodejsf:
     build:
       context: ./docker_nodejsf
