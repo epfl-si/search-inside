@@ -20,7 +20,7 @@ passport.deserializeUser(function (obj, done) {
 const app = express();
 
 app.use(expressSession({
-  secret: process.env.SESSION_SECRET,
+  secret: process.env.SEARCH_INSIDE_SESSION_SECRET,
   resave: false,
   saveUninitialized: false
 }));

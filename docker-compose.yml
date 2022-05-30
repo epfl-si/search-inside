@@ -45,6 +45,8 @@ services:
       context: ./docker_nodeapi
       dockerfile: Dockerfile
     container_name: search-inside-nodeapi
+    environment:
+      - SEARCH_INSIDE_SESSION_SECRET=${SEARCH_INSIDE_SESSION_SECRET}
     ports:
       - "4444:4444"
     depends_on:

@@ -9,7 +9,23 @@ help:
 	@echo "Utilities:"
 	@echo "  make build                 — Build"
 	@echo "  make build-force           — Force build"
+	@echo "  make print-env             — Print environment variables"
 	@echo "  make up                    — Run"
+
+# To add all variable to your shell, use
+# export $(xargs < /keybase/team/epfl_searchins/env);
+check-env:
+ifeq ($(wildcard /keybase/team/epfl_searchins/env),)
+	@echo "Be sure to have access to /keybase/team/epfl_searchins/env"
+	@exit 1
+else
+include /keybase/team/epfl_searchins/env
+export
+endif
+
+.PHONY: print-env
+print-env: check-env
+	@echo "SEARCH_INSIDE_SESSION_SECRET=${SEARCH_INSIDE_SESSION_SECRET}"
 
 init-elastic-data-dir:
 	@mkdir -p .elastic_data
@@ -30,5 +46,5 @@ build-force: set-dockerfile-dev
 	@docker-compose build --force-rm --no-cache --pull
 
 .PHONY: up
-up: init-elastic-data-dir
+up: check-env init-elastic-data-dir
 	@docker-compose up
