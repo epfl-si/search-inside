@@ -48,6 +48,7 @@ services:
     environment:
       - SEARCH_INSIDE_SEARCH_URL=http://localhost:3000
       - SEARCH_INSIDE_SESSION_SECRET=${SEARCH_INSIDE_SESSION_SECRET}
+    command: npm run start
     ports:
       - "4444:4444"
     depends_on:
