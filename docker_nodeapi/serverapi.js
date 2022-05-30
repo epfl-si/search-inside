@@ -1,5 +1,6 @@
 const express = require('express');
 const expressSession = require('express-session');
+const morgan = require('morgan');
 const passport = require('passport');
 const TequilaStrategy = require('passport-tequila').Strategy;
 
@@ -19,6 +20,7 @@ passport.deserializeUser(function (obj, done) {
 
 const app = express();
 
+app.use(morgan('combined'));
 app.use(expressSession({
   secret: process.env.SEARCH_INSIDE_SESSION_SECRET,
   resave: false,
