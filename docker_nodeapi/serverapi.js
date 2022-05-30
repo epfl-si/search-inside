@@ -32,6 +32,15 @@ app.get('/', tequila.ensureAuthenticated, function (req, res) {
   res.send('Hello World');
 });
 
+app.get('/auth/logout', function (req, res, next) {
+  req.logout(function (err) {
+    if (err) {
+      return next(err);
+    }
+    res.json({ success: true });
+  });
+});
+
 const portNumber = process.env.PORT || 4444;
 app.listen(portNumber);
 console.log(
