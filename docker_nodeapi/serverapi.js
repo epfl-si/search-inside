@@ -43,6 +43,13 @@ app.get('/', tequila.ensureAuthenticated, function (req, res) {
   res.send('Hello World');
 });
 
+app.get('/auth/check', function (req, res) {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ success: false });
+  }
+  return res.json({ success: true });
+});
+
 app.get('/auth/login', tequila.ensureAuthenticated, function (req, res) {
   res.redirect(process.env.SEARCH_INSIDE_SEARCH_URL);
 });
