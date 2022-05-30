@@ -1,8 +1,16 @@
+const cors = require('cors');
 const express = require('express');
 const expressSession = require('express-session');
 const morgan = require('morgan');
 const passport = require('passport');
 const TequilaStrategy = require('passport-tequila').Strategy;
+
+const corsOpts = {
+  origin: [
+    process.env.SEARCH_INSIDE_SEARCH_URL
+  ],
+  credentials: true
+};
 
 // Use the TequilaStrategy within Passport.
 const tequila = new TequilaStrategy({
@@ -21,6 +29,7 @@ passport.deserializeUser(function (obj, done) {
 const app = express();
 
 app.use(morgan('combined'));
+app.use(cors(corsOpts));
 app.use(expressSession({
   secret: process.env.SEARCH_INSIDE_SESSION_SECRET,
   resave: false,
