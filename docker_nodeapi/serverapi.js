@@ -1,9 +1,35 @@
+const axios = require('axios');
 const cors = require('cors');
 const express = require('express');
 const expressSession = require('express-session');
 const morgan = require('morgan');
 const passport = require('passport');
 const TequilaStrategy = require('passport-tequila').Strategy;
+
+const elasticSearchParams = {
+  query: {
+    simple_query_string: {
+      default_operator: 'and',
+      fields: [
+        'title',
+        'description',
+        'url',
+        'attachment.title',
+        'attachment.content'
+      ]
+    }
+  },
+  size: 10,
+  highlight: {
+    fragment_size: 200,
+    pre_tags: '<b>',
+    post_tags: '</b>',
+    fields: {
+      description: {},
+      'attachment.content': {}
+    }
+  }
+};
 
 const corsOpts = {
   origin: [
@@ -60,6 +86,27 @@ app.get('/auth/logout', function (req, res, next) {
       return next(err);
     }
     res.json({ success: true });
+  });
+});
+
+app.get('/api/search', function (req, res) {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ success: false });
+  }
+
+  elasticSearchParams.query.simple_query_string.query = req.query.q || '';
+  elasticSearchParams.from = req.query.from || 0;
+
+  axios.get(process.env.SEARCH_INSIDE_ELASTICSEARCH_URL + '/inside/_search', {
+    params: {
+      source: elasticSearchParams,
+      source_content_type: 'application/json'
+    }
+  }).then(function (response) {
+    const data = response && response.data;
+    return res.json(data.hits);
+  }).catch(function () {
+    return res.status(500).json({ success: false });
   });
 });
 
