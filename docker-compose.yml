@@ -46,6 +46,7 @@ services:
       dockerfile: Dockerfile
     container_name: search-inside-nodeapi
     environment:
+      - SEARCH_INSIDE_SEARCH_URL=http://localhost:3000
       - SEARCH_INSIDE_SESSION_SECRET=${SEARCH_INSIDE_SESSION_SECRET}
     ports:
       - "4444:4444"

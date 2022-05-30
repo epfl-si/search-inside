@@ -32,6 +32,10 @@ app.get('/', tequila.ensureAuthenticated, function (req, res) {
   res.send('Hello World');
 });
 
+app.get('/auth/login', tequila.ensureAuthenticated, function (req, res) {
+  res.redirect(process.env.SEARCH_INSIDE_SEARCH_URL);
+});
+
 app.get('/auth/logout', function (req, res, next) {
   req.logout(function (err) {
     if (err) {
