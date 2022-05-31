@@ -360,3 +360,20 @@
       oc tag wwp-test/search-inside-nodejsb:latest wwp/search-inside-nodejsb:prod
       oc tag wwp-test/search-inside-nodejsf:latest wwp/search-inside-nodejsf:prod
   tags: images.promote
+
+- name: NodeJS api - Service
+  openshift:
+    state: latest
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: "{{ searchinside_nodejsapi_servicename }}"
+      namespace: "{{ openshift_namespace }}"
+    spec:
+      type: ClusterIP
+      ports:
+        - port: "{{ searchinside_nodejsapi_port }}"
+          protocol: TCP
+          targetPort: "{{ searchinside_nodejsapi_port }}"
+      selector:
+        deployment-config.name: search-inside-nodejsapi
