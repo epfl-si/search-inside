@@ -387,6 +387,52 @@
   tags:
     - nodeapi.rebuild
 
+- name: NodeJS api - Deployment Config
+  openshift:
+    apiVersion: apps.openshift.io/v1
+    kind: DeploymentConfig
+    metadata:
+      name: search-inside-nodeapi
+      namespace: "{{ openshift_namespace }}"
+    spec:
+      replicas: 1
+      selector:
+        deployment-config.name: search-inside-nodeapi
+      template:
+        metadata:
+          creationTimestamp: null
+          labels:
+            deployment-config.name: search-inside-nodeapi
+        spec:
+          containers:
+            - env:
+              - name: SEARCH_INSIDE_ELASTICSEARCH_URL
+                value: 'http://search-inside-elastic.{{ openshift_namespace }}.svc:9200'
+              - name: SEARCH_INSIDE_SEARCH_URL
+                value: 'https://test-search.epfl.ch'
+              - name: SEARCH_INSIDE_SESSION_SECRET
+                valueFrom:
+                  secretKeyRef:
+                    name: search-inside-secrets
+                    key: SEARCH_INSIDE_SESSION_SECRET
+              image: 'docker-registry.default.svc:5000/{{ openshift_namespace }}/search-inside-nodeapi:{{ searchinside_image_tag }}'
+              imagePullPolicy: Always
+              name: search-inside-nodeapi
+          dnsPolicy: ClusterFirst
+          restartPolicy: Always
+          schedulerName: default-scheduler
+          terminationGracePeriodSeconds: 30
+      triggers:
+        - type: ImageChange
+          imageChangeParams:
+            automatic: true
+            containerNames:
+              - search-inside-nodeapi
+            from:
+              kind: ImageStreamTag
+              name: 'search-inside-nodeapi:{{ searchinside_image_tag }}'
+              namespace: "{{ openshift_namespace }}"
+
 - name: NodeJS api - Service
   openshift:
     state: latest
