@@ -36,6 +36,8 @@ set-dockerfile-dev:
 	@sed -i 's#docker-registry.default.svc:5000/wwp-test/##g' docker_nodejsb/Dockerfile-dev
 	@cp docker_nodejsf/Dockerfile docker_nodejsf/Dockerfile-dev
 	@sed -i 's#docker-registry.default.svc:5000/wwp-test/##g' docker_nodejsf/Dockerfile-dev
+	@cp docker_nodeapi/Dockerfile docker_nodeapi/Dockerfile-dev
+	@sed -i 's#docker-registry.default.svc:5000/wwp-test/##g' docker_nodeapi/Dockerfile-dev
 
 .PHONY: build
 build: set-dockerfile-dev
