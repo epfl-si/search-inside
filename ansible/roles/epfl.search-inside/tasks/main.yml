@@ -361,19 +361,45 @@
       oc tag wwp-test/search-inside-nodejsf:latest wwp/search-inside-nodejsf:prod
   tags: images.promote
 
+- name: NodeJS api - Image Stream
+  when: >-
+    openshift_namespace == "wwp-test"
+  openshift_imagestream:
+    state: latest
+    metadata:
+      namespace: "{{ openshift_namespace }}"
+      name: search-inside-nodeapi
+    git:
+      repository: "{{ searchinside_git_uri }}"
+      path: docker_nodeapi
+  register: _openshift_image_search_inside_nodeapi
+
+- name: NodeJS api - Rebuild image
+  when:
+    - >
+      ( (_openshift_image_search_inside_nodeapi | default({})) is changed )
+      or
+      "nodeapi.rebuild" in ansible_run_tags
+    - >-
+      openshift_namespace == "wwp-test"
+  shell: "oc -n {{ openshift_namespace }} start-build --wait search-inside-nodeapi"
+  delegate_to: localhost
+  tags:
+    - nodeapi.rebuild
+
 - name: NodeJS api - Service
   openshift:
     state: latest
     apiVersion: v1
     kind: Service
     metadata:
-      name: "{{ searchinside_nodejsapi_servicename }}"
+      name: "{{ searchinside_nodeapi_servicename }}"
       namespace: "{{ openshift_namespace }}"
     spec:
       type: ClusterIP
       ports:
-        - port: "{{ searchinside_nodejsapi_port }}"
+        - port: "{{ searchinside_nodeapi_port }}"
           protocol: TCP
-          targetPort: "{{ searchinside_nodejsapi_port }}"
+          targetPort: "{{ searchinside_nodeapi_port }}"
       selector:
-        deployment-config.name: search-inside-nodejsapi
+        deployment-config.name: search-inside-nodeapi
