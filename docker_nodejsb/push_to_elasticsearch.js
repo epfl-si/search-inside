@@ -6,7 +6,7 @@ const { convert } = require('html-to-text');
 
 const url = 'http://search-inside-elastic:9200';
 let sites = ['ae', 'chili', 'cipd', 'corp-id', 'help-wordpress', 'ic', 'internalhr', 'lcbc', 'library', 'lrm',
-  'lts4', 'sti-it', 'sti-ta', 'sv-it', 'teaching'];
+  'lts4', 'sti-it', 'sti-ta', 'sv-it', 'teaching', 'finances'];
 
 // Adapt host of inside websites and websites to include, depending where it is running (OS or public)
 let insideHost = 'httpd-inside:8443';
