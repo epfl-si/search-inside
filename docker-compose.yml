@@ -25,25 +25,25 @@ services:
       - ELASTICSEARCH_HOSTS=http://search-inside-elastic:9200
     depends_on:
       - elastic
-  nodejsb:
-    build:
-      context: ./docker_nodejsb
-      dockerfile: Dockerfile-dev
-    container_name: search-inside-nodejsb
-    ports:
-      - "5602:5602"
-    environment:
-      - RUNNING_HOST=local
-    depends_on:
-      - elastic
-    command: ./wait-for.sh --timeout=0 elastic:9200 -- nodemon push_to_elasticsearch.js
-    volumes:
-      - ./docker_nodejsb/wait-for.sh:/app/wait-for.sh
-      - ./docker_nodejsb/push_to_elasticsearch.js:/app/push_to_elasticsearch.js
+  # nodejsb:
+  #   build:
+  #     context: ./docker_nodejsb
+  #     dockerfile: Dockerfile-dev
+  #   container_name: search-inside-nodejsb
+  #   ports:
+  #     - "5602:5602"
+  #   environment:
+  #     - RUNNING_HOST=local
+  #   depends_on:
+  #     - elastic
+  #   command: ./wait-for.sh --timeout=0 elastic:9200 -- nodemon push_to_elasticsearch.js
+  #   volumes:
+  #     - ./docker_nodejsb/wait-for.sh:/app/wait-for.sh
+  #     - ./docker_nodejsb/push_to_elasticsearch.js:/app/push_to_elasticsearch.js
   nodeapi:
     build:
       context: ./docker_nodeapi
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile-dev
     container_name: search-inside-nodeapi
     environment:
       - SEARCH_INSIDE_SEARCH_URL=http://localhost:3000
