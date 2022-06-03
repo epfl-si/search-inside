@@ -15,38 +15,60 @@ if (process.env.RUNNING_HOST === 'local' || process.env.RUNNING_HOST === 'wwp-te
   sites = ['help-wordpress'];
 }
 
-// Read url and write the content of pages in elasticsearch
+// Get all pages data of a site
 const getPages = async (site) => {
   console.log('getPages');
 
   const agent = new https.Agent({ rejectUnauthorized: false });
 
-  return axios
-    .get(
-      `https://${insideHost}/${site}/wp-json/wp/v2/pages?per_page=100`,
-      { httpsAgent: agent, headers: { Host: 'inside.epfl.ch' } }
-    )
-    .then((result) => result)
-    .catch((error) => {
-      console.error('Erreur get pages ' + error);
-    });
+  let pages = [];
+  let currentPage = 0;
+  let totalPage = 0;
+
+  do {
+    const response = await axios
+      .get(
+        `https://${insideHost}/${site}/wp-json/wp/v2/pages?per_page=100&page=${++currentPage}`,
+        { httpsAgent: agent, headers: { Host: 'inside.epfl.ch' } }
+      )
+      .catch((error) => {
+        console.error('Error getPages (page: ' + currentPage + '): ' + error);
+      });
+    if (totalPage === 0) {
+      totalPage = response.headers['x-wp-totalpages'];
+    }
+    pages = pages.concat(response.data);
+  } while (currentPage < totalPage);
+
+  return pages;
 };
 
-// Read url and write the content of medias in elasticsearch
+// Get all medias data of a site
 const getMedias = async (site) => {
   console.log('getMedias');
 
   const agent = new https.Agent({ rejectUnauthorized: false });
 
-  return axios
-    .get(
-      `https://${insideHost}/${site}/wp-json/wp/v2/media?per_page=100`,
-      { httpsAgent: agent, headers: { Host: 'inside.epfl.ch' } }
-    )
-    .then((result) => result)
-    .catch((error) => {
-      console.error('Erreur get medias ' + error);
-    });
+  let medias = [];
+  let currentPage = 0;
+  let totalPage = 0;
+
+  do {
+    const response = await axios
+      .get(
+        `https://${insideHost}/${site}/wp-json/wp/v2/media?per_page=100&page=${++currentPage}`,
+        { httpsAgent: agent, headers: { Host: 'inside.epfl.ch' } }
+      )
+      .catch((error) => {
+        console.error('Error getMedias (page: ' + currentPage + '): ' + error);
+      });
+    if (totalPage === 0) {
+      totalPage = response.headers['x-wp-totalpages'];
+    }
+    medias = medias.concat(response.data);
+  } while (currentPage < totalPage);
+
+  return medias;
 };
 
 // Get media in base64 encoded string
@@ -79,16 +101,17 @@ const indexMedia = async (fileName, sourceMedia) => {
       rights: 'test'
     }, { maxBodyLength: Infinity })
       .catch((error) => {
-        console.log('ERROR POST attachment: ' + error);
+        console.log('Error POST attachment: ' + error);
       });
 
     console.log('indexMedia_fin ' + fileName + new Date().toISOString());
   } catch (e) {
-    console.log('ERROR indexMedia: ' + e);
+    console.log('Error indexMedia: ' + e);
   }
 };
 
-const writeDataPages = async (linkPage, titlePage, StripHTMLBreakLines) => {
+// Index a page
+const indexPage = async (linkPage, titlePage, StripHTMLBreakLines) => {
   try {
     // Write the data into elasticsearch
     axios({
@@ -102,7 +125,7 @@ const writeDataPages = async (linkPage, titlePage, StripHTMLBreakLines) => {
       }
     });
   } catch (e) {
-    console.log('Erreur write data pages ' + e);
+    console.log('Error POST indexPage: ' + e);
   }
 };
 
@@ -113,7 +136,7 @@ const deleteInsideTemp = async () => {
     .delete(`${url}/inside_temp`)
     .then((result) => result)
     .catch((error) => {
-      console.error('Erreur delete inside temp ' + error);
+      console.error('Error deleteInsideTemp: ' + error);
     });
 };
 
@@ -123,7 +146,7 @@ const deleteInside = async () => {
   return axios
     .delete(`${url}/inside`)
     .catch((error) => {
-      console.error('Erreur delete inside ' + error);
+      console.error('Error deleteInside: ' + error);
     });
 };
 
@@ -160,7 +183,7 @@ const createInsideTemp = async () => {
       }
     });
   } catch (e) {
-    console.log('Erreur create inside temp ' + e);
+    console.log('Erreur createInsideTemp: ' + e);
   }
 };
 
@@ -184,7 +207,7 @@ const createAttachmentField = async () => {
       }
     });
   } catch (e) {
-    console.log('Erreur create attachment field ' + e);
+    console.log('Error createAttachmentField: ' + e);
   }
 };
 
@@ -205,19 +228,18 @@ const copyInsideTempToInside = async () => {
       console.log(result.data);
     })
     .catch((error) => {
-      console.error('Erreur copy temp to inside ' + error);
+      console.error('Error copyInsideTempToInside: ' + error);
     });
 };
 
-// Get data from pages and medias
-const getDataFromPages = async () => {
-  console.log('getDataFromPages_debut' + new Date().toISOString());
+// Index all pages
+const indexAllPages = async () => {
+  console.log('indexAllPages_debut' + new Date().toISOString());
   try {
     for (const site of sites) {
       const pages = await getPages(site);
 
-      // Loop over each entries
-      for (const page of pages.data) {
+      for (const page of pages) {
         const linkPage = page.link;
         const titlePage = htmlEntities.decode(page.title.rendered);
 
@@ -249,37 +271,31 @@ const getDataFromPages = async () => {
         // Delete multiple space
         contentPage = contentPage.replace(/ +/g, ' ');
 
-        await writeDataPages(linkPage, titlePage, contentPage);
+        await indexPage(linkPage, titlePage, contentPage);
       }
 
-      console.log('getDataFromPages_fin' + new Date().toISOString());
+      console.log('indexAllPages_fin' + new Date().toISOString());
     }
   } catch (e) {
-    console.log('Erreur get data from pages ' + e);
+    console.log('Error indexAllPages: ' + e);
   }
 };
 
-// Get data from pages and medias
-const getDataFromMedias = async () => {
-  console.log('getDataFromMedias_debut' + new Date().toISOString());
+// Index all medias
+const indexAllMedias = async () => {
+  console.log('indexAllMedias_debut' + new Date().toISOString());
   try {
     for (const site of sites) {
-      console.log(site);
-
-      // Loop over each entries to display title
       const medias = await getMedias(site);
 
-      // Loop over each data entries
-      for (const media of medias.data) {
-        // Get source of the media
+      for (const media of medias) {
         const sourceMedia = media.source_url;
 
         if (media.mime_type === 'application/pdf') {
           const fileName = sourceMedia.match(/(?<=\/)[^/]*$/g);
-          console.log(`${fileName}`);
           await indexMedia(fileName, sourceMedia);
         } else {
-          console.log('file is not a pdf :' + `${sourceMedia}`);
+          console.log('file is not a pdf: ' + `${sourceMedia}`);
         }
       }
       console.log('getDataFromMedias_fin' + new Date().toISOString());
@@ -297,8 +313,8 @@ const launchScript = async () => {
   await delay(2000);
   await createAttachmentField();
   await delay(2000);
-  await getDataFromPages();
-  await getDataFromMedias();
+  await indexAllPages();
+  await indexAllMedias();
   await delay(2000);
   await deleteInside();
   await copyInsideTempToInside();
