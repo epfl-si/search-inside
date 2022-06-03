@@ -67,6 +67,25 @@ const getMedias = async (site) => {
   return medias;
 };
 
+// Index a page
+const indexPage = async (linkPage, titlePage, StripHTMLBreakLines) => {
+  try {
+    // Write the data into elasticsearch
+    axios({
+      method: 'POST',
+      url: `${url}/inside_temp/_doc`,
+      data: {
+        url: `${linkPage}`,
+        title: `${titlePage}`,
+        description: `${StripHTMLBreakLines}`,
+        rights: 'test'
+      }
+    });
+  } catch (e) {
+    console.log('Error POST indexPage: ' + e);
+  }
+};
+
 // Index a media (pdf only for the moment)
 const indexMedia = async (fileName, sourceMedia) => {
   const agent = new https.Agent({ rejectUnauthorized: false });
@@ -95,25 +114,6 @@ const indexMedia = async (fileName, sourceMedia) => {
       });
   } catch (e) {
     console.log('Error indexMedia: ' + e);
-  }
-};
-
-// Index a page
-const indexPage = async (linkPage, titlePage, StripHTMLBreakLines) => {
-  try {
-    // Write the data into elasticsearch
-    axios({
-      method: 'POST',
-      url: `${url}/inside_temp/_doc`,
-      data: {
-        url: `${linkPage}`,
-        title: `${titlePage}`,
-        description: `${StripHTMLBreakLines}`,
-        rights: 'test'
-      }
-    });
-  } catch (e) {
-    console.log('Error POST indexPage: ' + e);
   }
 };
 
