@@ -77,7 +77,13 @@ app.get('/auth/check', function (req, res) {
 });
 
 app.get('/auth/login', tequila.ensureAuthenticated, function (req, res) {
-  res.redirect(process.env.SEARCH_INSIDE_SEARCH_URL);
+  const params = new URLSearchParams({
+    q: req.query.q || '',
+    filter: req.query.filter || '',
+    type: req.query.type || '',
+    sort: req.query.sort || ''
+  });
+  res.redirect(process.env.SEARCH_INSIDE_SEARCH_URL + '?' + params.toString());
 });
 
 app.get('/auth/logout', function (req, res, next) {
