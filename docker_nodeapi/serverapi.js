@@ -4,6 +4,8 @@ const express = require('express');
 const expressSession = require('express-session');
 const morgan = require('morgan');
 const passport = require('passport');
+
+const MemoryStore = require('memorystore')(expressSession);
 const TequilaStrategy = require('passport-tequila').Strategy;
 
 const elasticSearchParams = {
@@ -57,6 +59,11 @@ const app = express();
 app.use(morgan('combined'));
 app.use(cors(corsOpts));
 app.use(expressSession({
+  cookie: { maxAge: 86400000 },
+  store: new MemoryStore({
+    checkPeriod: 86400000 // prune expired entries every 24h
+  }),
+  name: 'search-inside',
   secret: process.env.SEARCH_INSIDE_SESSION_SECRET,
   resave: false,
   saveUninitialized: false
