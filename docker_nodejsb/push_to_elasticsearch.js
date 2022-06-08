@@ -93,7 +93,7 @@ const indexMedia = async (fileName, sourceMedia) => {
   try {
     const sourceMediaTmp = sourceMedia.replace(/inside.epfl.ch/, insideHost);
 
-    axios.get(sourceMediaTmp, {
+    await axios.get(sourceMediaTmp, {
       responseType: 'arraybuffer', httpsAgent: agent, headers: { Host: 'inside.epfl.ch' }
     })
       .then((response) => {
