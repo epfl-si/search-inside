@@ -1,10 +1,20 @@
+const path = require('path');
 const axios = require('axios');
 const cors = require('cors');
 const express = require('express');
 const expressSession = require('express-session');
 const morgan = require('morgan');
 const passport = require('passport');
+
+const MemoryStore = require('memorystore')(expressSession);
 const TequilaStrategy = require('passport-tequila').Strategy;
+
+const SEARCH_INSIDE_INDEX = 'inside';
+const SEARCH_INSIDE_SEARCH = [
+  process.env.SEARCH_INSIDE_ELASTICSEARCH_URL,
+  SEARCH_INSIDE_INDEX,
+  '_search'
+].join('/');
 
 const elasticSearchParams = {
   query: {
@@ -45,6 +55,8 @@ const tequila = new TequilaStrategy({
 });
 passport.use(tequila);
 
+// To support persistent login sessions, Passport needs to be able to
+// serialize users into and deserialize users out of the session.
 passport.serializeUser(function (user, done) {
   done(null, user);
 });
@@ -54,20 +66,25 @@ passport.deserializeUser(function (obj, done) {
 
 const app = express();
 
+// Configure Express
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'ejs');
 app.use(morgan('combined'));
 app.use(cors(corsOpts));
 app.use(expressSession({
+  cookie: { maxAge: 86400000 },
+  store: new MemoryStore({
+    checkPeriod: 86400000 // Prune expired entries every 24h
+  }),
+  name: 'search-inside',
   secret: process.env.SEARCH_INSIDE_SESSION_SECRET,
   resave: false,
   saveUninitialized: false
 }));
 
+// Initialize Passport
 app.use(passport.initialize());
 app.use(passport.session());
-
-app.get('/', tequila.ensureAuthenticated, function (req, res) {
-  res.send('Hello World');
-});
 
 app.get('/auth/check', function (req, res) {
   if (!req.isAuthenticated()) {
@@ -77,7 +94,13 @@ app.get('/auth/check', function (req, res) {
 });
 
 app.get('/auth/login', tequila.ensureAuthenticated, function (req, res) {
-  res.redirect(process.env.SEARCH_INSIDE_SEARCH_URL);
+  const params = new URLSearchParams({
+    q: req.query.q || '',
+    filter: req.query.filter || '',
+    type: req.query.type || '',
+    sort: req.query.sort || ''
+  });
+  res.redirect(process.env.SEARCH_INSIDE_SEARCH_URL + '?' + params.toString());
 });
 
 app.get('/auth/logout', function (req, res, next) {
@@ -97,17 +120,21 @@ app.get('/api/search', function (req, res) {
   elasticSearchParams.query.simple_query_string.query = req.query.q || '';
   elasticSearchParams.from = req.query.from || 0;
 
-  axios.get(process.env.SEARCH_INSIDE_ELASTICSEARCH_URL + '/inside/_search', {
+  axios.get(SEARCH_INSIDE_SEARCH, {
     params: {
       source: elasticSearchParams,
       source_content_type: 'application/json'
     }
   }).then(function (response) {
-    const data = response && response.data;
-    return res.json(data.hits);
+    return res.json(response.data);
   }).catch(function () {
     return res.status(500).json({ success: false });
   });
+});
+
+// 404
+app.use(function (req, res, next) {
+  res.status(404).render('404');
 });
 
 const portNumber = process.env.PORT || 4444;
