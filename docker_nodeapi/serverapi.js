@@ -1,3 +1,4 @@
+const path = require('path');
 const axios = require('axios');
 const cors = require('cors');
 const express = require('express');
@@ -66,6 +67,8 @@ passport.deserializeUser(function (obj, done) {
 const app = express();
 
 // Configure Express
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'ejs');
 app.use(morgan('combined'));
 app.use(cors(corsOpts));
 app.use(expressSession({
@@ -127,6 +130,11 @@ app.get('/api/search', function (req, res) {
   }).catch(function () {
     return res.status(500).json({ success: false });
   });
+});
+
+// 404
+app.use(function (req, res, next) {
+  res.status(404).render('404');
 });
 
 const portNumber = process.env.PORT || 4444;
