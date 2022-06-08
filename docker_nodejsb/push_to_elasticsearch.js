@@ -86,7 +86,7 @@ const indexPage = async (linkPage, titlePage, StripHTMLBreakLines) => {
   }
 };
 
-// Index a media (pdf only for the moment)
+// Index a media (pdf, doc and docx for the moment)
 const indexMedia = async (fileName, sourceMedia) => {
   const agent = new https.Agent({ rejectUnauthorized: false });
 
@@ -95,23 +95,20 @@ const indexMedia = async (fileName, sourceMedia) => {
 
     await axios.get(sourceMediaTmp, {
       responseType: 'arraybuffer', httpsAgent: agent, headers: { Host: 'inside.epfl.ch' }
-    })
-      .then((response) => {
-        const data = Buffer.from(response.data, 'binary').toString('base64');
+    }).then((response) => {
+      const data = Buffer.from(response.data, 'binary').toString('base64');
 
-        axios.post(`${url}/inside_temp/_doc?pipeline=attachment`, {
-          url: `${sourceMedia}`,
-          title: `${fileName}`,
-          data: `${data}`,
-          rights: 'test'
-        }, { maxBodyLength: Infinity })
-          .catch((error) => {
-            console.log('Error POST attachment: ' + error);
-          });
-      })
-      .catch((error) => {
-        console.log('Error get media: ' + error);
+      axios.post(`${url}/inside_temp/_doc?pipeline=attachment`, {
+        url: `${sourceMedia}`,
+        title: `${fileName}`,
+        data: `${data}`,
+        rights: 'test'
+      }, { maxBodyLength: Infinity }).catch((error) => {
+        console.log('Error POST attachment: ' + error);
       });
+    }).catch((error) => {
+      console.log('Error get media (' + sourceMediaTmp + '): ' + error);
+    });
   } catch (e) {
     console.log('Error indexMedia: ' + e);
   }
@@ -122,6 +119,8 @@ const indexAllPages = async () => {
   console.time('indexAllPages');
   try {
     for (const site of sites) {
+      let count = 0;
+      console.time('indexAllPages (' + site + ')');
       const pages = await getPages(site);
 
       for (const page of pages) {
@@ -156,8 +155,11 @@ const indexAllPages = async () => {
         // Delete multiple space
         contentPage = contentPage.replace(/ +/g, ' ');
 
+        count++;
         await indexPage(linkPage, titlePage, contentPage);
       }
+      console.timeEnd('indexAllPages (' + site + ')');
+      console.log('total (pages): ' + count);
     }
   } catch (e) {
     console.log('Error indexAllPages: ' + e);
@@ -167,8 +169,11 @@ const indexAllPages = async () => {
 
 // Index all medias
 const indexAllMedias = async () => {
-  console.time('indexAllMedias');
   try {
+    const authorizedMimeTypes = ['application/pdf', 'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    console.time('indexAllMedias');
+
     for (const site of sites) {
       let count = 0;
       console.time('indexAllMedias (' + site + ')');
@@ -177,19 +182,20 @@ const indexAllMedias = async () => {
       for (const media of medias) {
         const sourceMedia = media.source_url;
 
-        if (media.mime_type === 'application/pdf') {
+        if (authorizedMimeTypes.includes(media.mime_type)) {
           count++;
           const fileName = sourceMedia.match(/(?<=\/)[^/]*$/g);
           await indexMedia(fileName, sourceMedia);
         } else {
-          console.log('file is not a pdf: ' + sourceMedia);
+          console.log('mime_type is not authorized: ' + sourceMedia +
+            ' (mime_type: ' + media.mime_type + ')');
         }
       }
       console.timeEnd('indexAllMedias (' + site + ')');
-      console.log('total (pdf): ' + count);
+      console.log('total (files): ' + count);
     }
   } catch (e) {
-    console.log('Erreur get data from medias' + e);
+    console.log('Error indexAllMedias: ' + e);
   }
   console.timeEnd('indexAllMedias');
 };
@@ -316,6 +322,7 @@ const launchScript = async () => {
   await delay(2000);
   await deleteInsideTemp();
   console.timeEnd('launchScript');
+  console.log('Finished at ' + new Date().toISOString());
 };
 
 launchScript();
