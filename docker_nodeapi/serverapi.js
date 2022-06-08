@@ -116,8 +116,7 @@ app.get('/api/search', function (req, res) {
       source_content_type: 'application/json'
     }
   }).then(function (response) {
-    const data = response && response.data;
-    return res.json(data.hits);
+    return res.json(response.data);
   }).catch(function () {
     return res.status(500).json({ success: false });
   });
