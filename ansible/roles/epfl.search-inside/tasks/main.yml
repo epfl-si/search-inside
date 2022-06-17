@@ -67,11 +67,11 @@
         spec:
           containers:
             - env:
-              - name: 'ES_JAVA_OPTS'
+              - name: ES_JAVA_OPTS
                 value: '-Xms4096m -Xmx4096m'
-              - name: 'xpack.security.enabled'
+              - name: xpack.security.enabled
                 value: 'false'
-              - name: 'discovery.type'
+              - name: discovery.type
                 value: 'single-node'
               image: 'docker-registry.default.svc:5000/{{ openshift_namespace }}/search-inside-elastic:{{ searchinside_image_tag }}'
               imagePullPolicy: Always
@@ -127,10 +127,10 @@
         spec:
           containers:
             - env:
-              - name: 'ELASTICSEARCH_URL'
-                value: 'http://search-inside-elastic.{{ openshift_namespace }}.svc:9200'
-              - name: 'ELASTICSEARCH_HOSTS'
-                value: 'http://search-inside-elastic.{{ openshift_namespace }}.svc:9200'
+              - name: ELASTICSEARCH_URL
+                value: "http://{{ searchinside_elastic_servicename }}.{{ openshift_namespace }}.svc:9200"
+              - name: ELASTICSEARCH_HOSTS
+                value: "http://{{ searchinside_elastic_servicename }}.{{ openshift_namespace }}.svc:9200"
               image: 'docker-registry.default.svc:5000/{{ openshift_namespace }}/search-inside-kibana:{{ searchinside_image_tag }}'
               imagePullPolicy: Always
               name: search-inside-kibana
@@ -222,12 +222,14 @@
         spec:
           containers:
             - env:
-              - name: 'ELASTICSEARCH_URL'
-                value: 'http://search-inside-elastic.{{ openshift_namespace }}.svc:9200'
-              - name: 'ELASTICSEARCH_HOSTS'
-                value: 'http://search-inside-elastic.{{ openshift_namespace }}.svc:9200'
-              - name: 'RUNNING_HOST'
-                value: "{{ openshift_namespace }}"
+              - name: ELASTIC_HOST
+                value: "http://{{ searchinside_elastic_servicename }}.{{ openshift_namespace }}.svc:9200"
+              - name: WP_VERITAS_HOST
+                value: "{{ nodejsb_wp_veritas_host }}"
+              - name: INSIDE_HOST
+                value: "{{ nodejsb_inside_host }}"
+              - name: INSIDE_HOST_HEADER_HOST
+                value: "{{ nodejsb_inside_host_header_host }}"
               image: 'docker-registry.default.svc:5000/{{ openshift_namespace }}/search-inside-nodejsb:{{ searchinside_image_tag }}'
               imagePullPolicy: Always
               name: search-inside-nodejsb
