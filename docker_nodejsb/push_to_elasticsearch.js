@@ -10,6 +10,9 @@ const INSIDE_HOST = process.env.INSIDE_HOST;
 const INSIDE_HOST_HEADER_HOST = process.env.INSIDE_HOST_HEADER_HOST;
 const insideSites = [];
 
+let totalPagesIndexed = 0;
+let totalMediasIndexed = 0;
+
 // Check that all environment variables are defined
 const checkEnvVars = () => {
   if (!ELASTIC_HOST) { console.log('ERROR: env ELASTIC_HOST is not defined.'); process.exit(1); }
@@ -74,7 +77,7 @@ const getPages = async (site) => {
         { httpsAgent: agent, headers: { Host: INSIDE_HOST_HEADER_HOST } }
       )
       .catch((error) => {
-        console.error('Error getPages (page: ' + currentPage + '): ' + error);
+        console.error('Error getPages (site: ' + site + ', page: ' + currentPage + '): ' + error);
       });
     if (totalPage === 0) {
       totalPage = response.headers['x-wp-totalpages'];
@@ -125,6 +128,7 @@ const indexPage = async (linkPage, titlePage, StripHTMLBreakLines) => {
         rights: 'test'
       }
     });
+    totalPagesIndexed++;
   } catch (e) {
     console.log('Error POST indexPage: ' + e);
   }
@@ -147,7 +151,9 @@ const indexMedia = async (fileName, sourceMedia) => {
         title: `${fileName}`,
         data: `${data}`,
         rights: 'test'
-      }, { maxBodyLength: Infinity }).catch((error) => {
+      }, { maxBodyLength: Infinity }).then((result) => {
+        totalMediasIndexed++;
+      }).catch((error) => {
         console.log('Error POST attachment: ' + error);
       });
     }).catch((error) => {
@@ -209,6 +215,7 @@ const indexAllPages = async () => {
   } catch (e) {
     console.log('Error indexAllPages: ' + e);
   }
+  console.log('Total pages indexed: ' + totalPagesIndexed);
   console.timeEnd('indexAllPages');
 };
 
@@ -235,11 +242,12 @@ const indexAllMedias = async () => {
         }
       }
       console.timeEnd('indexAllMedias (' + site + ')');
-      console.log('total (files): ' + count);
+      console.log('total (medias): ' + count);
     }
   } catch (e) {
     console.log('Error indexAllMedias: ' + e);
   }
+  console.log('** Total medias indexed: ' + totalMediasIndexed);
   console.timeEnd('indexAllMedias');
 };
 
@@ -362,8 +370,12 @@ const launchScript = async () => {
   await deleteInside();
   await copyInsideTempToInside();
   await deleteInsideTemp();
+  console.log('\n** Total ******************** ');
+  console.log(totalPagesIndexed + ' pages indexed.');
+  console.log(totalMediasIndexed + ' medias indexed.\n');
   console.timeEnd('launchScript');
   console.log('Finished at ' + new Date().toISOString());
+  await delay(1200000);
 };
 
 launchScript();
