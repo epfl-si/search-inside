@@ -4,16 +4,60 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const https = require('https');
 const { convert } = require('html-to-text');
 
-const url = 'http://search-inside-elastic:9200';
-let sites = ['ae', 'chili', 'cipd', 'corp-id', 'help-wordpress', 'ic', 'internalhr', 'lcbc', 'library', 'lrm',
-  'lts4', 'sti-it', 'sti-ta', 'sv-it', 'teaching', 'finances'];
+const ELASTIC_HOST = process.env.ELASTIC_HOST;
+const WP_VERITAS_HOST = process.env.WP_VERITAS_HOST;
+const INSIDE_HOST = process.env.INSIDE_HOST;
+const INSIDE_HOST_HEADER_HOST = process.env.INSIDE_HOST_HEADER_HOST;
+const insideSites = [];
 
-// Adapt host of inside websites and websites to include, depending where it is running (OS or public)
-let insideHost = 'httpd-inside:8443';
-if (process.env.RUNNING_HOST === 'local' || process.env.RUNNING_HOST === 'wwp-test') {
-  insideHost = 'inside.epfl.ch';
-  sites = ['help-wordpress'];
-}
+// Check that all environment variables are defined
+const checkEnvVars = () => {
+  if (!ELASTIC_HOST) { console.log('ERROR: env ELASTIC_HOST is not defined.'); process.exit(1); }
+  if (!WP_VERITAS_HOST) { console.log('ERROR: env WP_VERITAS_HOST is not defined.'); process.exit(1); }
+  if (!INSIDE_HOST) { console.log('ERROR: env INSIDE_HOST is not defined.'); process.exit(1); }
+  if (!INSIDE_HOST_HEADER_HOST) { console.log('ERROR: env INSIDE_HOST_HEADER_HOST is not defined.'); process.exit(1); }
+};
+
+// Set inside sites to index
+const setInsideSites = async () => {
+  console.log('Preparing inside sites to index...');
+  const agent = new https.Agent({ rejectUnauthorized: false });
+  const restrictedGroupNameAuthorized = ['', 'intranet-epfl'];
+
+  if (process.env.RUNNING_HOST === 'local') {
+    insideSites.push('help-wordpress');
+    console.log('Running locally: We crawl only https://inside.epfl.ch/help-wordpress');
+  } else {
+    await axios
+      .get(
+        `https://${WP_VERITAS_HOST}/api/v1/categories/Inside/sites`
+      ).then(async (response) => {
+        for (const siteData of response.data) {
+          const site = siteData.url.replace(/\/$/, '').split('/').pop();
+          // For V1 - We index only inside sites that do no have group restrictions (except intranet-epfl)
+          await axios
+            .get(
+              `https://${INSIDE_HOST}/${site}/wp-json/epfl-intranet/v1/groups`,
+              { httpsAgent: agent, headers: { Host: INSIDE_HOST_HEADER_HOST } }
+            ).then((response) => {
+              for (const group of response.data) {
+                const groupName = group.group_name;
+                if (restrictedGroupNameAuthorized.includes(groupName)) {
+                  insideSites.push(site);
+                  break;
+                }
+              }
+            }).catch((error) => {
+              console.log('Error get inside restricted groups (site: ' + site + '): ' + error);
+            });
+        }
+        console.log('Total: ' + insideSites.length + ' inside sites to index');
+        console.log(insideSites);
+      }).catch((error) => {
+        console.error('Error getInsideSites: ' + error);
+      });
+  }
+};
 
 // Get all pages data of a site
 const getPages = async (site) => {
@@ -26,8 +70,8 @@ const getPages = async (site) => {
   do {
     const response = await axios
       .get(
-        `https://${insideHost}/${site}/wp-json/wp/v2/pages?per_page=100&page=${++currentPage}`,
-        { httpsAgent: agent, headers: { Host: 'inside.epfl.ch' } }
+        `https://${INSIDE_HOST}/${site}/wp-json/wp/v2/pages?per_page=100&page=${++currentPage}`,
+        { httpsAgent: agent, headers: { Host: INSIDE_HOST_HEADER_HOST } }
       )
       .catch((error) => {
         console.error('Error getPages (page: ' + currentPage + '): ' + error);
@@ -52,8 +96,8 @@ const getMedias = async (site) => {
   do {
     const response = await axios
       .get(
-        `https://${insideHost}/${site}/wp-json/wp/v2/media?per_page=100&page=${++currentPage}`,
-        { httpsAgent: agent, headers: { Host: 'inside.epfl.ch' } }
+        `https://${INSIDE_HOST}/${site}/wp-json/wp/v2/media?per_page=100&page=${++currentPage}`,
+        { httpsAgent: agent, headers: { Host: INSIDE_HOST_HEADER_HOST } }
       )
       .catch((error) => {
         console.error('Error getMedias (page: ' + currentPage + '): ' + error);
@@ -71,9 +115,9 @@ const getMedias = async (site) => {
 const indexPage = async (linkPage, titlePage, StripHTMLBreakLines) => {
   try {
     // Write the data into elasticsearch
-    axios({
+    await axios({
       method: 'POST',
-      url: `${url}/inside_temp/_doc`,
+      url: `${ELASTIC_HOST}/inside_temp/_doc`,
       data: {
         url: `${linkPage}`,
         title: `${titlePage}`,
@@ -91,14 +135,14 @@ const indexMedia = async (fileName, sourceMedia) => {
   const agent = new https.Agent({ rejectUnauthorized: false });
 
   try {
-    const sourceMediaTmp = sourceMedia.replace(/inside.epfl.ch/, insideHost);
+    const sourceMediaTmp = sourceMedia.replace(INSIDE_HOST_HEADER_HOST, INSIDE_HOST);
 
     await axios.get(sourceMediaTmp, {
-      responseType: 'arraybuffer', httpsAgent: agent, headers: { Host: 'inside.epfl.ch' }
-    }).then((response) => {
+      responseType: 'arraybuffer', httpsAgent: agent, headers: { Host: INSIDE_HOST_HEADER_HOST }
+    }).then(async (response) => {
       const data = Buffer.from(response.data, 'binary').toString('base64');
 
-      axios.post(`${url}/inside_temp/_doc?pipeline=attachment`, {
+      await axios.post(`${ELASTIC_HOST}/inside_temp/_doc?pipeline=attachment`, {
         url: `${sourceMedia}`,
         title: `${fileName}`,
         data: `${data}`,
@@ -116,9 +160,10 @@ const indexMedia = async (fileName, sourceMedia) => {
 
 // Index all pages
 const indexAllPages = async () => {
+  console.log('Indexing pages...');
   console.time('indexAllPages');
   try {
-    for (const site of sites) {
+    for (const site of insideSites) {
       let count = 0;
       console.time('indexAllPages (' + site + ')');
       const pages = await getPages(site);
@@ -170,11 +215,12 @@ const indexAllPages = async () => {
 // Index all medias
 const indexAllMedias = async () => {
   try {
+    console.log('Indexing medias...');
     const authorizedMimeTypes = ['application/pdf', 'application/msword',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
     console.time('indexAllMedias');
 
-    for (const site of sites) {
+    for (const site of insideSites) {
       let count = 0;
       console.time('indexAllMedias (' + site + ')');
       const medias = await getMedias(site);
@@ -186,9 +232,6 @@ const indexAllMedias = async () => {
           count++;
           const fileName = sourceMedia.match(/(?<=\/)[^/]*$/g);
           await indexMedia(fileName, sourceMedia);
-        } else {
-          console.log('mime_type is not authorized: ' + sourceMedia +
-            ' (mime_type: ' + media.mime_type + ')');
         }
       }
       console.timeEnd('indexAllMedias (' + site + ')');
@@ -204,7 +247,7 @@ const indexAllMedias = async () => {
 const deleteInsideTemp = async () => {
   console.log('deleteInsideTemp');
   return axios
-    .delete(`${url}/inside_temp`)
+    .delete(`${ELASTIC_HOST}/inside_temp`)
     .catch((error) => {
       console.error('Error deleteInsideTemp: ' + error);
     });
@@ -214,7 +257,7 @@ const deleteInsideTemp = async () => {
 const deleteInside = async () => {
   console.time('deleteInside');
   return axios
-    .delete(`${url}/inside`)
+    .delete(`${ELASTIC_HOST}/inside`)
     .then((result) => {
       console.timeEnd('deleteInside');
     })
@@ -228,7 +271,7 @@ const createInsideTemp = async () => {
   try {
     axios({
       method: 'PUT',
-      url: `${url}/inside_temp`,
+      url: `${ELASTIC_HOST}/inside_temp`,
       data: {
         mappings: {
           properties: {
@@ -265,7 +308,7 @@ const createAttachmentField = async () => {
   try {
     axios({
       method: 'PUT',
-      url: `${url}/_ingest/pipeline/attachment`,
+      url: `${ELASTIC_HOST}/_ingest/pipeline/attachment`,
       data: {
         description: 'Extract attachment information',
         processors: [
@@ -289,7 +332,7 @@ const copyInsideTempToInside = async () => {
   console.time('copyInsideTempToInside');
   // Put the inside_temp into inside
   return axios
-    .post(`${url}/_reindex`, {
+    .post(`${ELASTIC_HOST}/_reindex`, {
       source: {
         index: 'inside_temp'
       },
@@ -308,18 +351,16 @@ const copyInsideTempToInside = async () => {
 
 const launchScript = async () => {
   console.time('launchScript');
+  checkEnvVars();
+  await setInsideSites();
   await deleteInsideTemp();
-  await delay(2000);
   await createInsideTemp();
-  await delay(2000);
   await createAttachmentField();
-  await delay(2000);
   await indexAllPages();
   await indexAllMedias();
   await delay(2000);
   await deleteInside();
   await copyInsideTempToInside();
-  await delay(2000);
   await deleteInsideTemp();
   console.timeEnd('launchScript');
   console.log('Finished at ' + new Date().toISOString());

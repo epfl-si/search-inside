@@ -34,6 +34,10 @@ services:
       - "5602:5602"
     environment:
       - RUNNING_HOST=local
+      - ELASTIC_HOST=http://search-inside-elastic:9200
+      - WP_VERITAS_HOST=N/A
+      - INSIDE_HOST=inside.epfl.ch
+      - INSIDE_HOST_HEADER_HOST=inside.epfl.ch
     depends_on:
       - elastic
     command: ./wait-for.sh --timeout=0 elastic:9200 -- nodemon push_to_elasticsearch.js
