@@ -12,6 +12,12 @@ RUN \
   npm ci && \
   npm cache clean --force
 
+# Force HTTPS
+RUN \
+  sed -i \
+    "s/var protocol = req.protocol || \"http\";/var protocol = 'https';/" \
+    node_modules/passport-tequila/lib/passport-tequila/protocol.js
+
 COPY serverapi.js /app
 
 CMD [ "node", "/app/serverapi.js" ]
