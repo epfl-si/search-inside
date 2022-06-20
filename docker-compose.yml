@@ -53,6 +53,7 @@ services:
       - SEARCH_INSIDE_SEARCH_URL=http://localhost:3000
       - SEARCH_INSIDE_ELASTICSEARCH_URL=http://search-inside-elastic:9200
       - SEARCH_INSIDE_SESSION_SECRET=${SEARCH_INSIDE_SESSION_SECRET}
+      - NODE_ENV=development
     command: npm run start
     ports:
       - "4444:4444"

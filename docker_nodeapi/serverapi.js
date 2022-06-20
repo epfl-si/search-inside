@@ -69,10 +69,18 @@ const app = express();
 // Configure Express
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
+
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
 app.use(morgan('combined'));
 app.use(cors(corsOpts));
 app.use(expressSession({
-  cookie: { maxAge: 86400000 },
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 86400000
+  },
   store: new MemoryStore({
     checkPeriod: 86400000 // Prune expired entries every 24h
   }),

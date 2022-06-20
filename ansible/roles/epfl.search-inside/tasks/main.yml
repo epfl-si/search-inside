@@ -412,6 +412,8 @@
                 value: 'http://search-inside-elastic.{{ openshift_namespace }}.svc:9200'
               - name: SEARCH_INSIDE_SEARCH_URL
                 value: 'https://test-search.epfl.ch'
+              - name: NODE_ENV
+                value: 'production'
               - name: SEARCH_INSIDE_SESSION_SECRET
                 valueFrom:
                   secretKeyRef:
