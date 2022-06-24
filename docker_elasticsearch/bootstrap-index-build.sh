@@ -1,3 +1,5 @@
+#!/bin/sh
+
 set -e -x
 
 # Run Elastic
