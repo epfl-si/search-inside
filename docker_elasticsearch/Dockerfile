@@ -3,7 +3,7 @@ RUN /usr/share/elasticsearch/bin/elasticsearch-plugin install --batch ingest-att
 
 ARG ELASTIC_HOST=http://localhost:9200
 ARG WP_VERITAS_HOST=wp-veritas.epfl.ch
-ARG INSIDE_HOST=httpd-inside.wwp.svc:9200
+ARG INSIDE_HOST=httpd-inside.wwp.svc:8443
 ARG INSIDE_HOST_HEADER_HOST=inside.epfl.ch
 ARG BUILD_ENV=OpenShift
 
