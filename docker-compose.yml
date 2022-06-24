@@ -15,8 +15,8 @@ services:
       - "discovery.type=single-node"
     ports:
       - "9200:9200"
-    volumes:
-      - ./.elastic_data:/usr/share/elasticsearch/data
+    # volumes:
+    #   - ./.elastic_data:/usr/share/elasticsearch/data
   kibana:
     image: docker.elastic.co/kibana/kibana:8.2.0
     container_name: search-inside-kibana

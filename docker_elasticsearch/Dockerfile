@@ -38,7 +38,7 @@ WORKDIR /app
 COPY package.json /app
 COPY package-lock.json ./
 RUN npm install
-COPY create_index.js /app
+COPY build_index.js /app
 COPY bootstrap-index-build.sh ./
 
 USER elasticsearch
