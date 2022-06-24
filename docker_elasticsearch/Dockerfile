@@ -35,10 +35,9 @@ RUN \
   rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-COPY package.json /app
-COPY package-lock.json ./
+COPY package*.json ./
 RUN npm install
-COPY build_index.js /app
+COPY build_index.js ./
 COPY bootstrap-index-build.sh ./
 
 USER elasticsearch
