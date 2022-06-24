@@ -27,7 +27,7 @@ const setInsideSites = async () => {
   const agent = new https.Agent({ rejectUnauthorized: false });
   const restrictedGroupNameAuthorized = ['', 'intranet-epfl'];
 
-  if (process.env.RUNNING_HOST === 'local') {
+  if (process.env.BUILD_ENV === 'local') {
     insideSites.push('help-wordpress');
     console.log('Running locally: We crawl only https://inside.epfl.ch/help-wordpress');
   } else {
@@ -375,7 +375,6 @@ const launchScript = async () => {
   console.log(totalMediasIndexed + ' medias indexed.\n');
   console.timeEnd('launchScript');
   console.log('Finished at ' + new Date().toISOString());
-  await delay(1200000);
 };
 
 launchScript();

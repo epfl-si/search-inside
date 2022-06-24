@@ -5,12 +5,14 @@ services:
     build:
       context: ./docker_elasticsearch
       dockerfile: Dockerfile
+      args:
+        - INSIDE_HOST=inside.epfl.ch
+        - BUILD_ENV=local
     container_name: search-inside-elastic
     environment:
       - "ES_JAVA_OPTS=-Xms4096m -Xmx4096m"
       - xpack.security.enabled=false
       - "discovery.type=single-node"
-      # - logger.level=WARN
     ports:
       - "9200:9200"
     volumes:
@@ -25,25 +27,6 @@ services:
       - ELASTICSEARCH_HOSTS=http://search-inside-elastic:9200
     depends_on:
       - elastic
-  nodejsb:
-    build:
-      context: ./docker_nodejsb
-      dockerfile: Dockerfile-dev
-    container_name: search-inside-nodejsb
-    ports:
-      - "5602:5602"
-    environment:
-      - RUNNING_HOST=local
-      - ELASTIC_HOST=http://search-inside-elastic:9200
-      - WP_VERITAS_HOST=N/A
-      - INSIDE_HOST=inside.epfl.ch
-      - INSIDE_HOST_HEADER_HOST=inside.epfl.ch
-    depends_on:
-      - elastic
-    command: ./wait-for.sh --timeout=0 elastic:9200 -- nodemon push_to_elasticsearch.js
-    volumes:
-      - ./docker_nodejsb/wait-for.sh:/app/wait-for.sh
-      - ./docker_nodejsb/push_to_elasticsearch.js:/app/push_to_elasticsearch.js
   nodeapi:
     build:
       context: ./docker_nodeapi

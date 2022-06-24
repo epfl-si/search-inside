@@ -32,8 +32,6 @@ init-elastic-data-dir:
 	@chmod 777 .elastic_data
 
 set-dockerfile-dev:
-	@cp docker_nodejsb/Dockerfile docker_nodejsb/Dockerfile-dev
-	@sed -i 's#docker-registry.default.svc:5000/wwp-test/##g' docker_nodejsb/Dockerfile-dev
 	@cp docker_nodeapi/Dockerfile docker_nodeapi/Dockerfile-dev
 	@sed -i 's#docker-registry.default.svc:5000/wwp-test/##g' docker_nodeapi/Dockerfile-dev
 

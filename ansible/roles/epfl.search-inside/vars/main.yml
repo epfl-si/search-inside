@@ -3,11 +3,9 @@ searchinside_image_tag: "{{ 'prod' if openshift_is_production else 'latest' }}"
 searchinside_git_uri: https://github.com/epfl-si/search-inside
 searchinside_elastic_port: 9200
 searchinside_kibana_port: 5601
-searchinside_nodejsb_port: 5602
 searchinside_nodeapi_port: 4444
 searchinside_elastic_servicename: "search-inside-elastic"
 searchinside_kibana_servicename: "search-inside-kibana"
-searchinside_nodejsb_servicename: "search-inside-nodejsb"
 searchinside_nodeapi_servicename: "search-inside-nodeapi"
 nodejs_base_image_name: node
 nodejs_base_image_tag: 16-alpine
@@ -16,6 +14,3 @@ nodejs_base_image_mirrored_from: "docker.io/{{ nodejs_base_image }}"
 nodejs_base_image_mirrored_to: "docker-registry.default.svc:5000/wwp-test/{{ nodejs_base_image }}"
 searchinside_secrets: "{{ lookup('file', '/keybase/team/epfl_searchins/secrets.yml') | from_yaml }}"
 searchinside_session_secret: "{{ searchinside_secrets.SEARCH_INSIDE_SESSION_SECRET }}"
-nodejsb_wp_veritas_host: "{{ 'wp-veritas.epfl.ch' if openshift_is_production else 'wp-veritas-test.epfl.ch' }}"
-nodejsb_inside_host: "{{ 'httpd-inside:8443' if openshift_is_production else 'httpd-int:8443' }}"
-nodejsb_inside_host_header_host: "{{ 'inside.epfl.ch' if openshift_is_production else 'inside-test.epfl.ch' }}"
