@@ -120,7 +120,7 @@ const indexPage = async (linkPage, titlePage, StripHTMLBreakLines) => {
     // Write the data into elasticsearch
     await axios({
       method: 'POST',
-      url: `${ELASTIC_HOST}/inside_temp/_doc`,
+      url: `${ELASTIC_HOST}/inside/_doc`,
       data: {
         url: `${linkPage}`,
         title: `${titlePage}`,
@@ -146,7 +146,7 @@ const indexMedia = async (fileName, sourceMedia) => {
     }).then(async (response) => {
       const data = Buffer.from(response.data, 'binary').toString('base64');
 
-      await axios.post(`${ELASTIC_HOST}/inside_temp/_doc?pipeline=attachment`, {
+      await axios.post(`${ELASTIC_HOST}/inside/_doc?pipeline=attachment`, {
         url: `${sourceMedia}`,
         title: `${fileName}`,
         data: `${data}`,
@@ -251,35 +251,12 @@ const indexAllMedias = async () => {
   console.timeEnd('indexAllMedias');
 };
 
-// Delete inside temp
-const deleteInsideTemp = async () => {
-  console.log('deleteInsideTemp');
-  return axios
-    .delete(`${ELASTIC_HOST}/inside_temp`)
-    .catch((error) => {
-      console.error('Error deleteInsideTemp: ' + error);
-    });
-};
-
-// Delete inside temp
-const deleteInside = async () => {
-  console.time('deleteInside');
-  return axios
-    .delete(`${ELASTIC_HOST}/inside`)
-    .then((result) => {
-      console.timeEnd('deleteInside');
-    })
-    .catch((error) => {
-      console.error('Error deleteInside: ' + error);
-    });
-};
-
-// Create inside temp
-const createInsideTemp = async () => {
+// Create inside index
+const createInsideIndex = async () => {
   try {
     axios({
       method: 'PUT',
-      url: `${ELASTIC_HOST}/inside_temp`,
+      url: `${ELASTIC_HOST}/inside`,
       data: {
         mappings: {
           properties: {
@@ -307,7 +284,7 @@ const createInsideTemp = async () => {
       }
     });
   } catch (e) {
-    console.log('Erreur createInsideTemp: ' + e);
+    console.log('Error createInsideIndex: ' + e);
   }
 };
 
@@ -335,46 +312,20 @@ const createAttachmentField = async () => {
   }
 };
 
-// Copy inside temp into inside
-const copyInsideTempToInside = async () => {
-  console.time('copyInsideTempToInside');
-  // Put the inside_temp into inside
-  return axios
-    .post(`${ELASTIC_HOST}/_reindex`, {
-      source: {
-        index: 'inside_temp'
-      },
-      dest: {
-        index: 'inside'
-      }
-    })
-    .then((result) => {
-      console.timeEnd('copyInsideTempToInside');
-      console.log(result.data);
-    })
-    .catch((error) => {
-      console.error('Error copyInsideTempToInside: ' + error);
-    });
-};
-
-const launchScript = async () => {
-  console.time('launchScript');
+const build = async () => {
+  console.time('build');
   checkEnvVars();
   await setInsideSites();
-  await deleteInsideTemp();
-  await createInsideTemp();
+  await createInsideIndex();
   await createAttachmentField();
   await indexAllPages();
   await indexAllMedias();
   await delay(2000);
-  await deleteInside();
-  await copyInsideTempToInside();
-  await deleteInsideTemp();
   console.log('\n** Total ******************** ');
   console.log(totalPagesIndexed + ' pages indexed.');
   console.log(totalMediasIndexed + ' medias indexed.\n');
-  console.timeEnd('launchScript');
+  console.timeEnd('build');
   console.log('Finished at ' + new Date().toISOString());
 };
 
-launchScript();
+build();
