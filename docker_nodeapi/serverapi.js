@@ -90,15 +90,21 @@ app.use(expressSession({
   saveUninitialized: false
 }));
 
+function isInsideEPFL (req) {
+  return req.get('X-EPFL-Internal') === 'TRUE' ||
+    process.env.SEARCH_INSIDE_ALLOW_EXTERNAL === 'True';
+}
+
 // Initialize Passport
 app.use(passport.initialize());
 app.use(passport.session());
 
 app.get('/auth/check', function (req, res) {
-  if (!req.isAuthenticated()) {
-    return res.status(401).json({ success: false });
-  }
-  return res.json({ success: true });
+  const status = {
+    login: req.isAuthenticated(),
+    internal: isInsideEPFL(req)
+  };
+  return res.json(status);
 });
 
 app.get('/auth/login', tequila.ensureAuthenticated, function (req, res) {
@@ -123,6 +129,10 @@ app.get('/auth/logout', function (req, res, next) {
 app.get('/api/search', function (req, res) {
   if (!req.isAuthenticated()) {
     return res.status(401).json({ success: false });
+  }
+
+  if (!isInsideEPFL(req)) {
+    return res.status(403).json({ success: false });
   }
 
   elasticSearchParams.query.simple_query_string.query = req.query.q || '';
