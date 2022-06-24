@@ -266,90 +266,6 @@
       selector:
         deployment-config.name: search-inside-nodejsb
 
-- name: NodeJS frontend - Image Stream
-  when: >-
-    openshift_namespace == "wwp-test"
-  openshift_imagestream:
-    state: latest
-    metadata:
-      namespace: "{{ openshift_namespace }}"
-      name: search-inside-nodejsf
-    git:
-      repository: "{{ searchinside_git_uri }}"
-      path: docker_nodejsf
-  register: _openshift_image_search_inside_nodejsf
-
-- name: NodeJS frontend - Rebuild image
-  when:
-    - >
-      ( (_openshift_image_search_inside_nodejsf | default({})) is changed )
-      or
-      "nodejsf.rebuild" in ansible_run_tags
-    - >-
-      openshift_namespace == "wwp-test"
-  shell: "oc -n {{ openshift_namespace }} start-build --wait search-inside-nodejsf"
-  delegate_to: localhost
-  tags:
-    - nodejsf.rebuild
-
-- name: NodeJS frontend - Deployment Config
-  openshift:
-    apiVersion: apps.openshift.io/v1
-    kind: DeploymentConfig
-    metadata:
-      name: search-inside-nodejsf
-      namespace: "{{ openshift_namespace }}"
-    spec:
-      replicas: 1
-      selector:
-        deployment-config.name: search-inside-nodejsf
-      template:
-        metadata:
-          creationTimestamp: null
-          labels:
-            deployment-config.name: search-inside-nodejsf
-        spec:
-          containers:
-            - env:
-              - name: 'ELASTICSEARCH_URL'
-                value: 'http://search-inside-elastic.{{ openshift_namespace }}.svc:9200'
-              - name: 'ELASTICSEARCH_HOSTS'
-                value: 'http://search-inside-elastic.{{ openshift_namespace }}.svc:9200'
-              image: 'docker-registry.default.svc:5000/{{ openshift_namespace }}/search-inside-nodejsf:{{ searchinside_image_tag }}'
-              imagePullPolicy: Always
-              name: search-inside-nodejsf
-          dnsPolicy: ClusterFirst
-          restartPolicy: Always
-          schedulerName: default-scheduler
-          terminationGracePeriodSeconds: 30
-      triggers:
-        - type: ImageChange
-          imageChangeParams:
-            automatic: true
-            containerNames:
-              - search-inside-nodejsf
-            from:
-              kind: ImageStreamTag
-              name: 'search-inside-nodejsf:{{ searchinside_image_tag }}'
-              namespace: "{{ openshift_namespace }}"
-
-- name: NodeJS frontend - Service
-  openshift:
-    state: latest
-    apiVersion: v1
-    kind: Service
-    metadata:
-      name: "{{ searchinside_nodejsf_servicename }}"
-      namespace: "{{ openshift_namespace }}"
-    spec:
-      type: ClusterIP
-      ports:
-        - port: "{{ searchinside_nodejsf_port }}"
-          protocol: TCP
-          targetPort: "{{ searchinside_nodejsf_port }}"
-      selector:
-        deployment-config.name: search-inside-nodejsf
-
 - name: Promote wwp-test search-inside-* images to wwp
   when: >-
     openshift_is_production and
@@ -360,7 +276,6 @@
       oc tag wwp-test/search-inside-elastic:latest wwp/search-inside-elastic:prod
       oc tag wwp-test/search-inside-kibana:latest wwp/search-inside-kibana:prod
       oc tag wwp-test/search-inside-nodejsb:latest wwp/search-inside-nodejsb:prod
-      oc tag wwp-test/search-inside-nodejsf:latest wwp/search-inside-nodejsf:prod
   tags: images.promote
 
 - name: NodeJS api - Image Stream

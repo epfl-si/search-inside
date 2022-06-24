@@ -61,15 +61,3 @@ services:
       - elastic
     volumes:
       - ./docker_nodeapi/serverapi.js:/app/serverapi.js
-  nodejsf:
-    build:
-      context: ./docker_nodejsf
-      dockerfile: Dockerfile-dev
-    container_name: search-inside-nodejsf
-    ports:
-      - "5603:5603"
-    depends_on:
-      - elastic
-    command: nodemon /app/serverf.js
-    volumes:
-      - ./docker_nodejsf/serverf.js:/app/serverf.js

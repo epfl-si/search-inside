@@ -4,12 +4,10 @@ searchinside_git_uri: https://github.com/epfl-si/search-inside
 searchinside_elastic_port: 9200
 searchinside_kibana_port: 5601
 searchinside_nodejsb_port: 5602
-searchinside_nodejsf_port: 5603
 searchinside_nodeapi_port: 4444
 searchinside_elastic_servicename: "search-inside-elastic"
 searchinside_kibana_servicename: "search-inside-kibana"
 searchinside_nodejsb_servicename: "search-inside-nodejsb"
-searchinside_nodejsf_servicename: "search-inside-nodejsf"
 searchinside_nodeapi_servicename: "search-inside-nodeapi"
 nodejs_base_image_name: node
 nodejs_base_image_tag: 16-alpine
