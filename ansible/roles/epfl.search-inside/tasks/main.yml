@@ -9,6 +9,10 @@
     git:
       repository: "{{ searchinside_git_uri }}"
       path: docker_elasticsearch
+    spec:
+      resources:
+        limits:
+          memory: "4G"
   register: _openshift_image_search_inside_elastic
 
 - name: Elastic - Rebuild image
