@@ -15,3 +15,5 @@ node /app/build_index.js
 
 # Check index
 curl http://localhost:9200/_cat/indices
+
+exit 0
