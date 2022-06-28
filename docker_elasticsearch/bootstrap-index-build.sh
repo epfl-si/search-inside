@@ -18,6 +18,6 @@ curl http://localhost:9200/_cat/indices
 
 # Stop Elastic
 pkill -F /tmp/pid
-while ps aux | grep elasticsearch | grep -v grep; do sleep 5; done
+while ps aux | grep "/usr/share/elasticsearch/jdk/bin/java" | grep -v grep; do sleep 5; done
 
 exit 0
