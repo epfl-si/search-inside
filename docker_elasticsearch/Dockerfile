@@ -43,7 +43,6 @@ COPY bootstrap-index-build.sh ./
 USER elasticsearch
 RUN ./bootstrap-index-build.sh
 
-RUN echo "test"
 
 FROM docker.elastic.co/elasticsearch/elasticsearch:8.2.0
 
