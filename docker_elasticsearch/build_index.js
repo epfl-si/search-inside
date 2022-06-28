@@ -319,7 +319,7 @@ const build = async () => {
   await createInsideIndex();
   await createAttachmentField();
   await indexAllPages();
-  await indexAllMedias();
+  // await indexAllMedias();
   await delay(2000);
   console.log('\n** Total ******************** ');
   console.log(totalPagesIndexed + ' pages indexed.');
