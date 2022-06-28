@@ -1,4 +1,5 @@
 FROM docker.elastic.co/elasticsearch/elasticsearch:8.2.0 as build-stage
+
 RUN /usr/share/elasticsearch/bin/elasticsearch-plugin install --batch ingest-attachment
 
 ARG ELASTIC_HOST=http://localhost:9200
@@ -49,3 +50,13 @@ FROM docker.elastic.co/elasticsearch/elasticsearch:8.2.0
 RUN /usr/share/elasticsearch/bin/elasticsearch-plugin install --batch ingest-attachment
 
 COPY --from=build-stage /usr/share/elasticsearch/data/ /usr/share/elasticsearch/data/
+
+RUN ls -lrt /usr/share/elasticsearch/data/
+
+RUN whoami
+
+USER root
+
+RUN chown -R elasticsearch:elasticsearch /usr/share/elasticsearch/data/
+
+USER elasticsearch
