@@ -57,6 +57,8 @@ RUN whoami
 
 USER root
 
-RUN chown -R elasticsearch:elasticsearch /usr/share/elasticsearch/data/
+# RUN chown -R elasticsearch:elasticsearch /usr/share/elasticsearch/data
+RUN chmod -R 777 /usr/share/elasticsearch/data
+RUN chown -R 1000:1000 /usr/share/elasticsearch/data
 
 USER elasticsearch
