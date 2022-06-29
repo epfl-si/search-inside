@@ -51,14 +51,10 @@ RUN /usr/share/elasticsearch/bin/elasticsearch-plugin install --batch ingest-att
 
 COPY --from=build-stage /usr/share/elasticsearch/data/ /usr/share/elasticsearch/data/
 
-RUN ls -lrt /usr/share/elasticsearch/data/
-
-RUN whoami
-
 USER root
 
-# RUN chown -R elasticsearch:elasticsearch /usr/share/elasticsearch/data
-# RUN chmod -R 777 /usr/share/elasticsearch/data
-RUN chown -R 1000:1000 /usr/share/elasticsearch/data
+RUN \
+  chmod -R 777 /usr/share/elasticsearch/data && \
+  chown -R elasticsearch:elasticsearch /usr/share/elasticsearch/data
 
 USER elasticsearch
