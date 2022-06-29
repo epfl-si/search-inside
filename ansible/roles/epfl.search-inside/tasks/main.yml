@@ -13,10 +13,10 @@
       resources:
         limits:
           cpu: '1'
-          memory: '4Gi'
+          memory: 4Gi
         requests:
           cpu: '1'
-          memory: '4Gi'
+          memory: 4Gi
   register: _openshift_image_search_inside_elastic
 
 - name: Elastic - Rebuild image
