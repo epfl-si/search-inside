@@ -10,7 +10,7 @@ services:
         - BUILD_ENV=local
     container_name: search-inside-elastic
     environment:
-      - "ES_JAVA_OPTS=-Xms4096m -Xmx4096m"
+      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
       - xpack.security.enabled=false
       - "discovery.type=single-node"
     ports:

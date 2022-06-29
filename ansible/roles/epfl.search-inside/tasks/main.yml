@@ -12,11 +12,11 @@
     spec:
       resources:
         limits:
-          cpu: 1
-          memory: "4Gi"
+          cpu: '1'
+          memory: '4Gi'
         requests:
-          cpu: 1
-          memory: "4Gi"
+          cpu: '1'
+          memory: '4Gi'
   register: _openshift_image_search_inside_elastic
 
 - name: Elastic - Rebuild image
@@ -52,7 +52,7 @@
           containers:
             - env:
               - name: ES_JAVA_OPTS
-                value: '-Xms4096m -Xmx4096m'
+                value: '-Xms2g -Xmx2g'
               - name: xpack.security.enabled
                 value: 'false'
               - name: discovery.type
@@ -60,6 +60,11 @@
               image: 'docker-registry.default.svc:5000/{{ openshift_namespace }}/search-inside-elastic:{{ searchinside_image_tag }}'
               imagePullPolicy: Always
               name: search-inside-elastic
+              resources:
+                requests:
+                  memory: '4Gi'
+                limits:
+                  memory: '4Gi'
           dnsPolicy: ClusterFirst
           restartPolicy: Always
           schedulerName: default-scheduler
