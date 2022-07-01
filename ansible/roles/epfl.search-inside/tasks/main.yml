@@ -51,6 +51,8 @@
         spec:
           containers:
             - env:
+              - name: bootstrap.memory_lock
+                value: 'true'
               - name: ES_JAVA_OPTS
                 value: '-Xms2g -Xmx2g'
               - name: xpack.security.enabled
