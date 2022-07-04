@@ -107,7 +107,7 @@
       name: search-inside-kibana
       namespace: "{{ openshift_namespace }}"
     tag: 8.2.0
-    from: docker.elastic.co/kibana/kibana:8.2.0
+    from: docker.elastic.co/kibana/kibana:8.3.1
   register: _openshift_image_search_inside_kibana
 
 - name: Kibana - Rebuild image
