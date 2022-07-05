@@ -266,6 +266,16 @@
                   secretKeyRef:
                     name: search-inside-secrets
                     key: SEARCH_INSIDE_SESSION_SECRET
+              - name: SEARCH_INSIDE_ELASTIC_USERNAME
+                valueFrom:
+                  secretKeyRef:
+                    name: search-inside-secrets
+                    key: SEARCH_INSIDE_ELASTIC_USERNAME
+              - name: SEARCH_INSIDE_ELASTIC_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: search-inside-secrets
+                    key: SEARCH_INSIDE_ELASTIC_PASSWORD
               image: 'docker-registry.default.svc:5000/{{ openshift_namespace }}/search-inside-nodeapi:{{ searchinside_image_tag }}'
               imagePullPolicy: Always
               name: search-inside-nodeapi
