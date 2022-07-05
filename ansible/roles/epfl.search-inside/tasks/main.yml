@@ -258,7 +258,7 @@
               - name: SEARCH_INSIDE_SEARCH_URL
                 value: 'https://test-search.epfl.ch'
               - name: SEARCH_INSIDE_ALLOW_EXTERNAL
-                value: False
+                value: 'False'
               - name: NODE_ENV
                 value: 'production'
               - name: SEARCH_INSIDE_SESSION_SECRET
