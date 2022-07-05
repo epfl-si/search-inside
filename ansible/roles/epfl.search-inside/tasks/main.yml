@@ -56,7 +56,12 @@
               - name: ES_JAVA_OPTS
                 value: '-Xms2g -Xmx2g'
               - name: xpack.security.enabled
-                value: 'false'
+                value: 'true'
+              - name: ELASTIC_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: search-inside-secrets
+                    key: SEARCH_INSIDE_ELASTIC_PASSWORD
               - name: discovery.type
                 value: 'single-node'
               image: 'docker-registry.default.svc:5000/{{ openshift_namespace }}/search-inside-elastic:{{ searchinside_image_tag }}'
