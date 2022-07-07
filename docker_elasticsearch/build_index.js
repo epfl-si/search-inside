@@ -23,21 +23,21 @@ const authElastic = {
 let totalPagesIndexed = 0;
 let totalMediasIndexed = 0;
 
-// Check that all environment variables are defined
+// Check that all environment variables are not empty
 const checkEnvVars = () => {
   if (!SEARCH_INSIDE_ELASTIC_PASSWORD) {
-    console.log('ERROR: env SEARCH_INSIDE_ELASTIC_PASSWORD is not defined.'); process.exit(1);
+    console.log('ERROR: env SEARCH_INSIDE_ELASTIC_PASSWORD is empty.'); process.exit(1);
   }
   if (!SEARCH_INSIDE_API_RO_USERNAME) {
-    console.log('ERROR: env SEARCH_INSIDE_API_RO_USERNAME is not defined.'); process.exit(1);
+    console.log('ERROR: env SEARCH_INSIDE_API_RO_USERNAME is empty.'); process.exit(1);
   }
   if (!SEARCH_INSIDE_API_RO_PASSWORD) {
-    console.log('ERROR: env SEARCH_INSIDE_API_RO_PASSWORD is not defined.'); process.exit(1);
+    console.log('ERROR: env SEARCH_INSIDE_API_RO_PASSWORD is empty.'); process.exit(1);
   }
-  if (!ELASTIC_HOST) { console.log('ERROR: env ELASTIC_HOST is not defined.'); process.exit(1); }
-  if (!WP_VERITAS_HOST) { console.log('ERROR: env WP_VERITAS_HOST is not defined.'); process.exit(1); }
-  if (!INSIDE_HOST) { console.log('ERROR: env INSIDE_HOST is not defined.'); process.exit(1); }
-  if (!INSIDE_HOST_HEADER_HOST) { console.log('ERROR: env INSIDE_HOST_HEADER_HOST is not defined.'); process.exit(1); }
+  if (!ELASTIC_HOST) { console.log('ERROR: env ELASTIC_HOST is empty.'); process.exit(1); }
+  if (!WP_VERITAS_HOST) { console.log('ERROR: env WP_VERITAS_HOST is empty.'); process.exit(1); }
+  if (!INSIDE_HOST) { console.log('ERROR: env INSIDE_HOST is empty.'); process.exit(1); }
+  if (!INSIDE_HOST_HEADER_HOST) { console.log('ERROR: env INSIDE_HOST_HEADER_HOST is empty.'); process.exit(1); }
 };
 
 // Set inside sites to index

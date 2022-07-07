@@ -2,6 +2,10 @@
 
 set -e -x
 
+if [ -z "${SEARCH_INSIDE_ELASTIC_PASSWORD}" ]; then
+  echo "SEARCH_INSIDE_ELASTIC_PASSWORD environment variable is empty"; exit 1;
+fi
+
 [[ -f /usr/share/elasticsearch/config/elasticsearch.keystore ]] || (elasticsearch-keystore create)
 if ! (elasticsearch-keystore has-passwd --silent) ; then
   # keystore is unencrypted
