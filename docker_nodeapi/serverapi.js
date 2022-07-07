@@ -9,12 +9,14 @@ const passport = require('passport');
 const MemoryStore = require('memorystore')(expressSession);
 const TequilaStrategy = require('passport-tequila').Strategy;
 
-const SEARCH_INSIDE_INDEX = 'inside';
-const SEARCH_INSIDE_SEARCH = [
-  process.env.SEARCH_INSIDE_ELASTICSEARCH_URL,
-  SEARCH_INSIDE_INDEX,
-  '_search'
-].join('/');
+const elasticClient = axios.create({
+  baseURL: process.env.SEARCH_INSIDE_ELASTICSEARCH_URL,
+  timeout: 1000,
+  auth: {
+    username: process.env.SEARCH_INSIDE_ELASTIC_USERNAME,
+    password: process.env.SEARCH_INSIDE_ELASTIC_PASSWORD
+  }
+});
 
 const elasticSearchParams = {
   query: {
@@ -138,14 +140,14 @@ app.get('/api/search', function (req, res) {
   elasticSearchParams.query.simple_query_string.query = req.query.q || '';
   elasticSearchParams.from = req.query.from || 0;
 
-  axios.get(SEARCH_INSIDE_SEARCH, {
+  elasticClient.get('/inside/_search', {
     params: {
       source: elasticSearchParams,
       source_content_type: 'application/json'
     }
   }).then(function (response) {
     return res.json(response.data);
-  }).catch(function () {
+  }).catch(function (e) {
     return res.status(500).json({ success: false });
   });
 });
