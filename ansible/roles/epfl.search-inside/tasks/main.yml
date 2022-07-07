@@ -111,7 +111,7 @@
     metadata:
       name: search-inside-kibana
       namespace: "{{ openshift_namespace }}"
-    tag: 8.2.0
+    tag: 8.3.1
     from: docker.elastic.co/kibana/kibana:8.3.1
   register: _openshift_image_search_inside_kibana
 
@@ -316,3 +316,5 @@
       SEARCH_INSIDE_SESSION_SECRET: "{{ searchinside_session_secret | b64encode }}"
       SEARCH_INSIDE_ELASTIC_USERNAME: "{{ searchinside_elastic_username | b64encode }}"
       SEARCH_INSIDE_ELASTIC_PASSWORD: "{{ searchinside_elastic_password | b64encode }}"
+      SEARCH_INSIDE_API_RO_USERNAME: "{{ searchinside_api_ro_username | b64encode }}"
+      SEARCH_INSIDE_API_RO_PASSWORD: "{{ searchinside_api_ro_password | b64encode }}"

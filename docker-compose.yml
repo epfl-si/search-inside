@@ -6,13 +6,18 @@ services:
       context: ./docker_elasticsearch
       dockerfile: Dockerfile
       args:
+        - SEARCH_INSIDE_ELASTIC_PASSWORD=${SEARCH_INSIDE_ELASTIC_PASSWORD}
+        - SEARCH_INSIDE_API_RO_USERNAME=${SEARCH_INSIDE_API_RO_USERNAME}
+        - SEARCH_INSIDE_API_RO_PASSWORD=${SEARCH_INSIDE_API_RO_PASSWORD}
+        - SEARCH_INSIDE_KIBANA_PASSWORD=${SEARCH_INSIDE_KIBANA_PASSWORD}
         - INSIDE_HOST=inside.epfl.ch
         - BUILD_ENV=local
     container_name: search-inside-elastic
     environment:
       - bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
-      - xpack.security.enabled=false
+      - xpack.security.enabled=true
+      - ELASTIC_PASSWORD=${SEARCH_INSIDE_ELASTIC_PASSWORD}
       - discovery.type=single-node
     ulimits:
       memlock:
@@ -23,13 +28,15 @@ services:
     # volumes:
     #   - ./.elastic_data:/usr/share/elasticsearch/data
   kibana:
-    image: docker.elastic.co/kibana/kibana:8.2.0
+    image: docker.elastic.co/kibana/kibana:8.3.1
     container_name: search-inside-kibana
     ports:
       - "5601:5601"
     environment:
       - ELASTICSEARCH_URL=http://search-inside-elastic:9200
       - ELASTICSEARCH_HOSTS=http://search-inside-elastic:9200
+      - ELASTICSEARCH_USERNAME=kibana_system
+      - ELASTICSEARCH_PASSWORD=${SEARCH_INSIDE_KIBANA_PASSWORD}
     depends_on:
       - elastic
   nodeapi:
