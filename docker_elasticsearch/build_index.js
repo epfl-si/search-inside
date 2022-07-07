@@ -193,6 +193,10 @@ const getPages = async (site) => {
       .catch((error) => {
         console.error('Error get pages (site: ' + site + ', page: ' + currentPage + '): ' + error);
       });
+    // temporary fix
+    if (!response) {
+      return pages;
+    }
     if (totalPage === 0) {
       totalPage = response.headers['x-wp-totalpages'];
     }
