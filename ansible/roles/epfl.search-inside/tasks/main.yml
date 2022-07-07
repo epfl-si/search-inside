@@ -1,3 +1,21 @@
+- name: Search Inside - Secrets
+  openshift:
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: search-inside-secrets
+      namespace: "{{ openshift_namespace }}"
+    type: Opaque
+    data: >-
+      {{ _data | from_yaml }}
+  vars:
+    _data: |
+      SEARCH_INSIDE_SESSION_SECRET: "{{ searchinside_session_secret | b64encode }}"
+      SEARCH_INSIDE_ELASTIC_USERNAME: "{{ searchinside_elastic_username | b64encode }}"
+      SEARCH_INSIDE_ELASTIC_PASSWORD: "{{ searchinside_elastic_password | b64encode }}"
+      SEARCH_INSIDE_API_RO_USERNAME: "{{ searchinside_api_ro_username | b64encode }}"
+      SEARCH_INSIDE_API_RO_PASSWORD: "{{ searchinside_api_ro_password | b64encode }}"
+
 - name: Elastic - Image Stream
   when: >-
     openshift_namespace == "wwp-test"
@@ -11,7 +29,7 @@
       path: docker_elasticsearch
     strategy:
       dockerStrategy:
-        buildArgs:
+        env:
           - name: SEARCH_INSIDE_ELASTIC_PASSWORD
             valueFrom:
               secretKeyRef:
@@ -328,21 +346,3 @@
           targetPort: "{{ searchinside_nodeapi_port }}"
       selector:
         deployment-config.name: search-inside-nodeapi
-
-- name: Search Inside - Secrets
-  openshift:
-    apiVersion: v1
-    kind: Secret
-    metadata:
-      name: search-inside-secrets
-      namespace: "{{ openshift_namespace }}"
-    type: Opaque
-    data: >-
-      {{ _data | from_yaml }}
-  vars:
-    _data: |
-      SEARCH_INSIDE_SESSION_SECRET: "{{ searchinside_session_secret | b64encode }}"
-      SEARCH_INSIDE_ELASTIC_USERNAME: "{{ searchinside_elastic_username | b64encode }}"
-      SEARCH_INSIDE_ELASTIC_PASSWORD: "{{ searchinside_elastic_password | b64encode }}"
-      SEARCH_INSIDE_API_RO_USERNAME: "{{ searchinside_api_ro_username | b64encode }}"
-      SEARCH_INSIDE_API_RO_PASSWORD: "{{ searchinside_api_ro_password | b64encode }}"
