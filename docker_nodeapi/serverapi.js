@@ -13,8 +13,8 @@ const elasticClient = axios.create({
   baseURL: process.env.SEARCH_INSIDE_ELASTICSEARCH_URL,
   timeout: 1000,
   auth: {
-    username: process.env.SEARCH_INSIDE_ELASTIC_USERNAME,
-    password: process.env.SEARCH_INSIDE_ELASTIC_PASSWORD
+    username: process.env.SEARCH_INSIDE_API_RO_USERNAME,
+    password: process.env.SEARCH_INSIDE_API_RO_PASSWORD
   }
 });
 
