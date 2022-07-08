@@ -108,6 +108,21 @@
                   memory: '4Gi'
                 limits:
                   memory: '4Gi'
+              readinessProbe:
+                exec:
+                  command:
+                    - sh
+                    - -c
+                    - |
+                      #!/usr/bin/env/bash
+                      if curl -u {{ searchinside_api_ro_username }}:{{ searchinside_api_ro_password }} http://localhost:9200/; then
+                        exit 0
+                      else
+                        exit 1
+                      fi
+                initialDelaySeconds: 5
+                timeoutSeconds: 30
+                periodSeconds: 60
           dnsPolicy: ClusterFirst
           restartPolicy: Always
           schedulerName: default-scheduler
