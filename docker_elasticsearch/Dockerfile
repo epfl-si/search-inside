@@ -2,7 +2,7 @@ FROM docker.elastic.co/elasticsearch/elasticsearch:8.3.1 as build-stage
 
 RUN /usr/share/elasticsearch/bin/elasticsearch-plugin install --batch ingest-attachment
 
-ARG SEARCH_INSIDE_ELASTIC_PASSWORD
+ARG SEARCH_INSIDE_ELASTIC_PASSWORD=elastic
 ARG SEARCH_INSIDE_API_RO_USERNAME
 ARG SEARCH_INSIDE_API_RO_PASSWORD
 ARG SEARCH_INSIDE_KIBANA_PASSWORD

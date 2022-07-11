@@ -30,11 +30,6 @@
     strategy:
       dockerStrategy:
         env:
-          - name: SEARCH_INSIDE_ELASTIC_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: search-inside-secrets
-                key: SEARCH_INSIDE_ELASTIC_PASSWORD
           - name: SEARCH_INSIDE_API_RO_USERNAME
             valueFrom:
               secretKeyRef:
