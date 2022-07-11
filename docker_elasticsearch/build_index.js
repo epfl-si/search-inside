@@ -83,6 +83,7 @@ const setInsideSites = async () => {
 
 // Create inside index
 const createInsideIndex = async () => {
+  console.log('Creating inside index...');
   await axios.put(`${ELASTIC_HOST}/inside`, {
     mappings: {
       properties: {
@@ -98,14 +99,18 @@ const createInsideIndex = async () => {
       }
     }
   }, { auth: authElastic })
+    .then((res) => {
+      console.log(res.data);
+    })
     .catch((error) => {
       console.log('Error create inside index: ' + error);
       process.exit(1);
     });
 };
 
-// Create attachment field
-const createAttachmentField = async () => {
+// Configure ingest attachment processor
+const configureIngestAttachment = async () => {
+  console.log('Configuring ingest attachment...');
   await axios.put(`${ELASTIC_HOST}/_ingest/pipeline/attachment`, {
     description: 'Extract attachment information',
     processors: [
@@ -118,15 +123,18 @@ const createAttachmentField = async () => {
       }
     ]
   }, { auth: authElastic })
+    .then((res) => {
+      console.log(res.data);
+    })
     .catch((error) => {
-      console.log('Error create attachment field: ' + error);
+      console.log('Error configure attachment: ' + error);
       process.exit(1);
     });
 };
 
 // Create user, role and rolemapping
 const createUserAndRole = async () => {
-  console.log('Create user, role and role_mapping...');
+  console.log('Creating user, role and role_mapping...');
 
   // Create role 'inside_read'
   await axios.post(`${ELASTIC_HOST}/_security/role/inside_read`, {
@@ -136,6 +144,9 @@ const createUserAndRole = async () => {
       privileges: ['read', 'view_index_metadata']
     }]
   }, { auth: authElastic })
+    .then((res) => {
+      console.log(res.data);
+    })
     .catch((error) => {
       console.log('Error create role: ' + error);
       process.exit(1);
@@ -146,6 +157,9 @@ const createUserAndRole = async () => {
     password: SEARCH_INSIDE_API_RO_PASSWORD,
     roles: ['inside_read']
   }, { auth: authElastic })
+    .then((res) => {
+      console.log(res.data);
+    })
     .catch((error) => {
       console.log('Error create user: ' + error);
       process.exit(1);
@@ -160,6 +174,9 @@ const createUserAndRole = async () => {
     },
     metadata: { version: 1 }
   }, { auth: authElastic })
+    .then((res) => {
+      console.log(res.data);
+    })
     .catch((error) => {
       console.log('Error create role mapping: ' + error);
       process.exit(1);
@@ -173,7 +190,7 @@ const setKibanaPassword = async () => {
       password: SEARCH_INSIDE_KIBANA_PASSWORD
     }, { auth: authElastic })
       .catch((error) => {
-        console.log('Error set kibana_system password: ' + error);
+        console.log('Error set Kibana password: ' + error);
         process.exit(1);
       });
   }
@@ -277,12 +294,12 @@ const indexMedia = async (fileName, sourceMedia) => {
 
 // Index all pages
 const indexAllPages = async () => {
-  console.log('Indexing pages...');
-  console.time('indexAllPages');
+  console.log('Indexing all pages...');
+  console.time('Duration (index pages of all sites)');
   try {
     for (const site of insideSites) {
       let count = 0;
-      console.time('indexAllPages (' + site + ')');
+      console.time('- site: ' + site);
       const pages = await getPages(site);
 
       for (const page of pages) {
@@ -320,28 +337,28 @@ const indexAllPages = async () => {
         count++;
         await indexPage(linkPage, titlePage, contentPage);
       }
-      console.timeEnd('indexAllPages (' + site + ')');
-      console.log('total (pages): ' + count);
+      console.timeEnd('- site: ' + site);
+      console.log('  - total pages: ' + count);
     }
   } catch (e) {
     console.log('Error indexAllPages: ' + e);
     process.exit(1);
   }
   console.log('Total pages indexed: ' + totalPagesIndexed);
-  console.timeEnd('indexAllPages');
+  console.timeEnd('Duration (index pages of all sites)');
 };
 
 // Index all medias
 const indexAllMedias = async () => {
   try {
-    console.log('Indexing medias...');
+    console.log('Indexing all medias...');
     const authorizedMimeTypes = ['application/pdf', 'application/msword',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-    console.time('indexAllMedias');
+    console.time('Duration (index medias of all sites)');
 
     for (const site of insideSites) {
       let count = 0;
-      console.time('indexAllMedias (' + site + ')');
+      console.time('- site: ' + site);
       const medias = await getMedias(site);
 
       for (const media of medias) {
@@ -353,33 +370,34 @@ const indexAllMedias = async () => {
           await indexMedia(fileName, sourceMedia);
         }
       }
-      console.timeEnd('indexAllMedias (' + site + ')');
-      console.log('total (medias): ' + count);
+      console.timeEnd('- site: ' + site);
+      console.log('  - total medias: ' + count);
     }
   } catch (e) {
     console.log('Error indexAllMedias: ' + e);
     process.exit(1);
   }
-  console.log('** Total medias indexed: ' + totalMediasIndexed);
-  console.timeEnd('indexAllMedias');
+  console.log('Total medias indexed: ' + totalMediasIndexed);
+  console.timeEnd('Duration (index medias of all sites)');
 };
 
 const build = async () => {
-  console.time('build');
+  console.time('Duration');
   checkEnvVars();
   await setInsideSites();
   await createInsideIndex();
-  await createAttachmentField();
+  await configureIngestAttachment();
   await createUserAndRole();
   await setKibanaPassword();
   await indexAllPages();
   // await indexAllMedias();
   await delay(2000);
-  console.log('\n** Total ******************** ');
+  console.log('\nBuild index sucessful.\n');
+  console.log('*********************************************************');
+  console.timeEnd('Duration');
   console.log(totalPagesIndexed + ' pages indexed.');
-  console.log(totalMediasIndexed + ' medias indexed.\n');
-  console.timeEnd('build');
-  console.log('Finished at ' + new Date().toISOString());
+  console.log(totalMediasIndexed + ' medias indexed.');
+  console.log('*********************************************************\n');
 };
 
 build();
