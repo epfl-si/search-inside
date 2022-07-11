@@ -21,7 +21,10 @@ ES_JAVA_OPTS="-Xms2g -Xmx2g" \
                 -d -p /tmp/pid
 
 # Wait for Elastic
-while ! curl -u elastic:$SEARCH_INSIDE_ELASTIC_PASSWORD http://localhost:9200/_cat/health?h=st; do sleep 5; done
+while ! curl -XGET -u elastic:$SEARCH_INSIDE_ELASTIC_PASSWORD \
+  http://localhost:9200/_cluster/health?wait_for_status=yellow;
+do sleep 5;
+done
 
 # Build index
 node /app/build_index.js
