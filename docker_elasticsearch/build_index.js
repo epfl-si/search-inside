@@ -28,6 +28,9 @@ const checkEnvVars = () => {
   if (!SEARCH_INSIDE_ELASTIC_PASSWORD) {
     console.log('ERROR: env SEARCH_INSIDE_ELASTIC_PASSWORD is empty.'); process.exit(1);
   }
+  if (!SEARCH_INSIDE_KIBANA_PASSWORD) {
+    console.log('ERROR: env SEARCH_INSIDE_KIBANA_PASSWORD is empty.'); process.exit(1);
+  }
   if (!SEARCH_INSIDE_API_RO_USERNAME) {
     console.log('ERROR: env SEARCH_INSIDE_API_RO_USERNAME is empty.'); process.exit(1);
   }

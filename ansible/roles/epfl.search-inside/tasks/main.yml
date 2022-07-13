@@ -11,8 +11,8 @@
   vars:
     _data: |
       SEARCH_INSIDE_SESSION_SECRET: "{{ searchinside_session_secret | b64encode }}"
-      SEARCH_INSIDE_ELASTIC_USERNAME: "{{ searchinside_elastic_username | b64encode }}"
       SEARCH_INSIDE_ELASTIC_PASSWORD: "{{ searchinside_elastic_password | b64encode }}"
+      SEARCH_INSIDE_KIBANA_PASSWORD: "{{ searchinside_kibana_password | b64encode }}"
       SEARCH_INSIDE_API_RO_USERNAME: "{{ searchinside_api_ro_username | b64encode }}"
       SEARCH_INSIDE_API_RO_PASSWORD: "{{ searchinside_api_ro_password | b64encode }}"
 
@@ -30,6 +30,11 @@
     strategy:
       dockerStrategy:
         env:
+          - name: SEARCH_INSIDE_KIBANA_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: search-inside-secrets
+                key: SEARCH_INSIDE_KIBANA_PASSWORD
           - name: SEARCH_INSIDE_API_RO_USERNAME
             valueFrom:
               secretKeyRef:
@@ -197,6 +202,13 @@
                 value: "http://{{ searchinside_elastic_servicename }}.{{ openshift_namespace }}.svc:9200"
               - name: ELASTICSEARCH_HOSTS
                 value: "http://{{ searchinside_elastic_servicename }}.{{ openshift_namespace }}.svc:9200"
+              - name: ELASTICSEARCH_USERNAME
+                value: kibana_system
+              - name: ELASTICSEARCH_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: search-inside-secrets
+                    key: SEARCH_INSIDE_KIBANA_PASSWORD
               image: 'docker-registry.default.svc:5000/{{ openshift_namespace }}/search-inside-kibana:{{ searchinside_image_tag }}'
               imagePullPolicy: Always
               name: search-inside-kibana

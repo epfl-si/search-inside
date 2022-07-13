@@ -14,7 +14,7 @@ nodejs_base_image_mirrored_from: "docker.io/{{ nodejs_base_image }}"
 nodejs_base_image_mirrored_to: "docker-registry.default.svc:5000/wwp-test/{{ nodejs_base_image }}"
 searchinside_secrets: "{{ lookup('file', '/keybase/team/epfl_searchins/secrets.yml') | from_yaml }}"
 searchinside_session_secret: "{{ searchinside_secrets.SEARCH_INSIDE_SESSION_SECRET }}"
-searchinside_elastic_username: "{{ searchinside_secrets.SEARCH_INSIDE_ELASTIC_USERNAME }}"    # To remove..
 searchinside_elastic_password: "{{ searchinside_secrets.SEARCH_INSIDE_ELASTIC_PASSWORD }}"
+searchinside_kibana_password: "{{ searchinside_secrets.SEARCH_INSIDE_KIBANA_PASSWORD }}"
 searchinside_api_ro_username: "{{ searchinside_secrets.SEARCH_INSIDE_API_RO_USERNAME }}"
 searchinside_api_ro_password: "{{ searchinside_secrets.SEARCH_INSIDE_API_RO_PASSWORD }}"
