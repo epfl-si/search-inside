@@ -393,7 +393,7 @@ const build = async () => {
   await createUserAndRole();
   await setKibanaPassword();
   await indexAllPages();
-  // await indexAllMedias();
+  await indexAllMedias();
   await delay(2000);
   console.log('\nBuild index sucessful.\n');
   console.log('*********************************************************');
