@@ -1,0 +1,26 @@
+version: '3.2'
+
+services:
+  elastic:
+    build:
+      context: ./docker_elasticsearch
+      dockerfile: Dockerfile
+      args:
+        - SEARCH_INSIDE_API_RO_USERNAME=${SEARCH_INSIDE_API_RO_USERNAME}
+        - SEARCH_INSIDE_API_RO_PASSWORD=${SEARCH_INSIDE_API_RO_PASSWORD}
+        - SEARCH_INSIDE_KIBANA_PASSWORD=${SEARCH_INSIDE_KIBANA_PASSWORD}
+        - INSIDE_HOST=inside.epfl.ch
+        - BUILD_ENV=local
+    container_name: search-inside-elastic
+    environment:
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+      - xpack.security.enabled=true
+      - ELASTIC_PASSWORD=${SEARCH_INSIDE_ELASTIC_PASSWORD}
+      - discovery.type=single-node
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "9200:9200"

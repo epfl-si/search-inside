@@ -1,0 +1,23 @@
+version: '3.2'
+
+services:
+  nodeapi:
+    build:
+      context: ./docker_nodeapi
+      dockerfile: Dockerfile-dev
+    container_name: search-inside-nodeapi
+    environment:
+      - SEARCH_INSIDE_SEARCH_URL=http://localhost:3000
+      - SEARCH_INSIDE_ELASTICSEARCH_URL=http://search-inside-elastic:9200
+      - SEARCH_INSIDE_SESSION_SECRET=${SEARCH_INSIDE_SESSION_SECRET}
+      - SEARCH_INSIDE_ALLOW_EXTERNAL=True
+      - SEARCH_INSIDE_API_RO_USERNAME=${SEARCH_INSIDE_API_RO_USERNAME}
+      - SEARCH_INSIDE_API_RO_PASSWORD=${SEARCH_INSIDE_API_RO_PASSWORD}
+      - NODE_ENV=development
+    command: npm run start
+    ports:
+      - "4444:4444"
+    depends_on:
+      - elastic
+    volumes:
+      - ./docker_nodeapi/serverapi.js:/app/serverapi.js

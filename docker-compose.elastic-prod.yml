@@ -1,0 +1,18 @@
+version: '3.2'
+
+services:
+  elastic:
+    image: os-docker-registry.epfl.ch/wwp-test/search-inside-elastic:latest
+    container_name: search-inside-elastic
+    environment:
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+      - xpack.security.enabled=true
+      - ELASTIC_PASSWORD=${SEARCH_INSIDE_ELASTIC_PASSWORD}
+      - discovery.type=single-node
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "9200:9200"
