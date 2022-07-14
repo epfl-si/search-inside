@@ -212,11 +212,8 @@ const getPages = async (site) => {
       })
       .catch((error) => {
         console.error('Error get pages (site: ' + site + ', page: ' + currentPage + '): ' + error);
+        process.exit(1);
       });
-    // temporary fix
-    if (!response) {
-      return pages;
-    }
     if (totalPage === 0) {
       totalPage = response.headers['x-wp-totalpages'];
     }
@@ -239,6 +236,7 @@ const getMedias = async (site) => {
       })
       .catch((error) => {
         console.error('Error get medias (page: ' + currentPage + '): ' + error);
+        process.exit(1);
       });
     if (totalPage === 0) {
       totalPage = response.headers['x-wp-totalpages'];
