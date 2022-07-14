@@ -270,7 +270,7 @@ const indexMedia = async (fileName, sourceMedia) => {
   try {
     const sourceMediaTmp = sourceMedia.replace(INSIDE_HOST_HEADER_HOST, INSIDE_HOST);
 
-    await axios.get(sourceMediaTmp, {
+    await axios.get(encodeURI(sourceMediaTmp), {
       responseType: 'arraybuffer', httpsAgent: agent, headers: { Host: INSIDE_HOST_HEADER_HOST }
     }).then(async (response) => {
       const data = Buffer.from(response.data, 'binary').toString('base64');
