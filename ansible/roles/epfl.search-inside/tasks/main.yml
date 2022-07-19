@@ -27,6 +27,7 @@
     git:
       repository: "{{ searchinside_git_uri }}"
       path: docker_elasticsearch
+      ref: enh-add-jenkins-config
     strategy:
       dockerStrategy:
         env:
@@ -368,3 +369,20 @@
           targetPort: "{{ searchinside_nodeapi_port }}"
       selector:
         deployment-config.name: search-inside-nodeapi
+
+- name: Jenkins pipeline - BuildConfig
+  when: >-
+    openshift_namespace == "wwp-test"
+  openshift:
+    state: latest
+    apiVersion: v1
+    kind: BuildConfig
+    metadata:
+      labels:
+        app: jenkins
+      name: "search-inside-elastic-jenkins"
+      namespace: "{{ openshift_namespace }}"
+    spec:
+      strategy:
+        jenkinsPipelineStrategy:
+          jenkinsfile: '{{ lookup("template", "Jenkinsfile") }}'
