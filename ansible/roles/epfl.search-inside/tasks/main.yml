@@ -27,7 +27,6 @@
     git:
       repository: "{{ searchinside_git_uri }}"
       path: docker_elasticsearch
-      ref: enh-add-jenkins-config
     strategy:
       dockerStrategy:
         env:
