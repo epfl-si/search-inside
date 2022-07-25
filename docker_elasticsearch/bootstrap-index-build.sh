@@ -2,6 +2,9 @@
 
 set -e -x
 
+echo 'Fail the build for test..'
+exit 1
+
 if [ -z "${SEARCH_INSIDE_ELASTIC_PASSWORD}" ]; then
   echo "SEARCH_INSIDE_ELASTIC_PASSWORD environment variable is empty"; exit 1;
 fi
@@ -25,9 +28,6 @@ while ! curl -XGET -u elastic:$SEARCH_INSIDE_ELASTIC_PASSWORD \
   http://localhost:9200/_cluster/health?wait_for_status=yellow;
 do sleep 5;
 done
-
-echo 'Fail the build for test..'
-exit 1
 
 # Build index
 node /app/build_index.js
