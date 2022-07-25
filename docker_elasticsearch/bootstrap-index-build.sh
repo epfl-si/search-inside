@@ -26,6 +26,9 @@ while ! curl -XGET -u elastic:$SEARCH_INSIDE_ELASTIC_PASSWORD \
 do sleep 5;
 done
 
+echo 'Fail the build for test..'
+exit 1
+
 # Build index
 node /app/build_index.js
 

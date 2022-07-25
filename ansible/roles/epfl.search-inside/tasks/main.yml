@@ -27,6 +27,7 @@
     git:
       repository: "{{ searchinside_git_uri }}"
       path: docker_elasticsearch
+      ref: test-build-failed
     strategy:
       dockerStrategy:
         env:
