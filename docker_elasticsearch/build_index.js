@@ -73,6 +73,7 @@ const setInsideSites = async () => {
               }
             }).catch((error) => {
               console.log('Error get inside restricted groups (site: ' + site + '): ' + error);
+              process.exit(1);
             });
         }
         console.log('Total: ' + insideSites.length + ' inside sites to index');
