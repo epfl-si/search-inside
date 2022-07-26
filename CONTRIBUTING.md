@@ -6,7 +6,7 @@ Prerequisites
 
 * Access to the team Keybase /keybase/team/epfl_searchins.
 * Access to OpenShift EPFL projects 'wwp-test' and 'wwp'.
-* OpenShift CLI (oc) and Ansible installed.
+* OpenShift CLI [oc](https://docs.openshift.com/container-platform/3.11/cli_reference/get_started_cli.html#installing-the-cli) and [Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) installed.
 
 
 Build / Run
