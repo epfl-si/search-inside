@@ -290,7 +290,7 @@
     metadata:
       labels:
         app: jenkins
-      name: "search-inside-elastic-jenkins"
+      name: "search-inside-elastic"
       namespace: "{{ openshift_namespace }}"
     spec:
       strategy:

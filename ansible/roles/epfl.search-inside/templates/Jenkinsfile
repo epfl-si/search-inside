@@ -34,13 +34,19 @@ pipeline {
           openshift.withCluster() {
             openshift.withProject() {
               def bc = openshift.selector('bc/search-inside-elastic')
-              def buildSelector = bc.startBuild()
-              timeout(60) {
-                buildSelector.untilEach(1) {
-                  return (it.object().status.phase == "Complete")
-                }
-              }
+              bc.startBuild("--wait", "--follow")
             }
+          }
+        }
+      }
+      post {
+        failure {
+          script {
+            // Send an email if the current pipeline run has a "failed" status (red in the UI)
+            emailext subject: '$DEFAULT_SUBJECT',
+              body: '$DEFAULT_CONTENT',
+              from: 'noreply@epfl.ch',
+              to: 'isas-fsd-search-inside@groupes.epfl.ch'
           }
         }
       }
