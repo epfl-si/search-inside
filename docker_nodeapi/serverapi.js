@@ -1,6 +1,7 @@
 const path = require('path');
 const axios = require('axios');
 const cors = require('cors');
+const nocache = require('nocache');
 const express = require('express');
 const expressSession = require('express-session');
 const morgan = require('morgan');
@@ -77,6 +78,7 @@ if (process.env.NODE_ENV === 'production') {
   app.set('trust proxy', 1);
 }
 
+app.use(nocache());
 app.use(morgan('combined'));
 app.use(cors(corsOpts));
 app.use(expressSession({
