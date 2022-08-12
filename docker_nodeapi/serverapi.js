@@ -71,6 +71,7 @@ const app = express();
 // Configure Express
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
+app.set('etag', false);
 
 if (process.env.NODE_ENV === 'production') {
   app.set('trust proxy', 1);
