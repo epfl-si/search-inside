@@ -280,6 +280,26 @@
       selector:
         deployment-config.name: search-inside-nodeapi
 
+- name: NodeJS api - Route
+  openshift:
+    state: latest
+    apiVersion: route.openshift.io/v1
+    kind: Route
+    metadata:
+      name: "{{ searchinside_nodeapi_routename }}"
+      namespace: "{{ openshift_namespace }}"
+    spec:
+      host: "{{ searchinside_nodeapi_hostname }}"
+      wildcardPolicy: None
+      port:
+        targetPort: 4444
+      tls:
+        termination: edge
+      to:
+        kind: Service
+        name: "{{ searchinside_nodeapi_servicename }}"
+        weight: 100
+
 - name: Jenkins pipeline - BuildConfig
   when: >-
     openshift_namespace == "wwp-test"
