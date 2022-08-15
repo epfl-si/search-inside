@@ -7,6 +7,7 @@ searchinside_elastic_servicename: "search-inside-elastic"
 searchinside_nodeapi_servicename: "search-inside-nodeapi"
 searchinside_nodeapi_routename: "httpd-search-inside-nodeapi"
 searchinside_nodeapi_hostname: "{{ 'search-inside-api.epfl.ch' if openshift_is_production else 'search-inside-api-test.epfl.ch' }}"
+searchinside_nodeapi_search_url: "{{ 'https://search.epfl.ch' if openshift_is_production else 'https://test-search.epfl.ch' }}"
 nodejs_base_image_name: node
 nodejs_base_image_tag: 16-alpine
 nodejs_base_image: "{{ nodejs_base_image_name }}:{{ nodejs_base_image_tag }}"

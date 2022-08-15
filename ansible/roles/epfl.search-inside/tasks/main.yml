@@ -226,7 +226,7 @@
               - name: SEARCH_INSIDE_ELASTICSEARCH_URL
                 value: 'http://search-inside-elastic.{{ openshift_namespace }}.svc:9200'
               - name: SEARCH_INSIDE_SEARCH_URL
-                value: 'https://test-search.epfl.ch'
+                value: "{{ searchinside_nodeapi_search_url }}"
               - name: SEARCH_INSIDE_ALLOW_EXTERNAL
                 value: 'False'
               - name: NODE_ENV
