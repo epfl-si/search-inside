@@ -61,6 +61,7 @@ mode=ansible-playbook
 inventory_mode="test"
 
 declare -a ansible_args
+ansible_args=(-e "elasticsible_dir=$OLDPWD")
 while [ "$#" -gt 0 ]; do
   case "$1" in
         -m) mode=ansible
