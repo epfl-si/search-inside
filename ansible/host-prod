@@ -1,2 +1,2 @@
 [wwp-group]
-wwp      ansible_connection=local  ansible_python_interpreter={{elasticsible_dir}}/bin/python3  openshift_namespace=wwp
+wwp      ansible_connection=local  ansible_python_interpreter={{elasticsible_suitcase_dir}}/bin/python3  openshift_namespace=wwp
