@@ -48,10 +48,13 @@ const setInsideSites = async () => {
   console.log('Preparing inside sites to index...');
   const restrictedGroupNameAuthorized = ['', 'intranet-epfl'];
 
-  if (process.env.BUILD_ENV === 'local') {
-    insideSites.push('help-wordpress');
-    console.log('Running locally: We crawl only https://inside.epfl.ch/help-wordpress');
+  if (process.env.INSIDE_SITES_TO_INDEX !== '') {
+    // Useful specifically for building the index locally (dev)
+    for (const site of process.env.INSIDE_SITES_TO_INDEX.split(',')) {
+      insideSites.push(site);
+    }
   } else {
+    // Get the list to index in WP Veritas
     await axios
       .get(
         `https://${WP_VERITAS_HOST}/api/v1/categories/Inside/sites`
@@ -267,6 +270,7 @@ const indexPage = async (linkPage, titlePage, StripHTMLBreakLines) => {
 // Index a media (pdf, doc and docx for the moment)
 const indexMedia = async (fileName, sourceMedia) => {
   try {
+    // Adapt url return by the API
     const sourceMediaTmp = sourceMedia.replace(INSIDE_HOST_HEADER_HOST, INSIDE_HOST);
 
     await axios.get(encodeURI(sourceMediaTmp), {
