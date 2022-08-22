@@ -120,9 +120,9 @@
                       else
                         exit 1
                       fi
-                initialDelaySeconds: 5
+                initialDelaySeconds: 30
                 timeoutSeconds: 30
-                periodSeconds: 60
+                periodSeconds: 30
           dnsPolicy: ClusterFirst
           restartPolicy: Always
           schedulerName: default-scheduler
