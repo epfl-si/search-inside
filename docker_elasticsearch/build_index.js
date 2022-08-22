@@ -66,11 +66,24 @@ const setInsideSites = async () => {
             .get(
               `https://${INSIDE_HOST}/${site}/wp-json/epfl-intranet/v1/groups`,
               { httpsAgent: agent, headers: { Host: INSIDE_HOST_HEADER_HOST } }
-            ).then((response) => {
+            ).then(async (response) => {
               for (const group of response.data) {
                 const groupName = group.group_name;
                 if (restrictedGroupNameAuthorized.includes(groupName)) {
-                  insideSites.push(site);
+                  // Site with no specific group restriction
+                  await axios
+                    .get(
+                      `https://${INSIDE_HOST}/${site}/wp-json/epfl/v1/coming-soon`,
+                      { httpsAgent: agent, headers: { Host: INSIDE_HOST_HEADER_HOST } }
+                    ).then((response) => {
+                      if (response.data.status === '0') {
+                        // Index the site only if plugin epfl-coming-soon is not activated
+                        insideSites.push(site);
+                      }
+                    }).catch((error) => {
+                      console.log('Error get coming-soon status (site: ' + site + '): ' + error);
+                      process.exit(1);
+                    });
                   break;
                 }
               }
