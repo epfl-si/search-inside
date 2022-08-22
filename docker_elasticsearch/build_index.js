@@ -292,6 +292,7 @@ const indexMedia = async (fileName, sourceMedia) => {
         });
     }).catch((error) => {
       console.log('Error get media (' + sourceMediaTmp + '): ' + error);
+      process.exit(1);
     });
   } catch (e) {
     console.log('Error indexMedia: ' + e);
