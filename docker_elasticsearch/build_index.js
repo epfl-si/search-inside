@@ -13,6 +13,10 @@ const WP_VERITAS_HOST = process.env.WP_VERITAS_HOST;
 const INSIDE_HOST = process.env.INSIDE_HOST;
 const INSIDE_HOST_HEADER_HOST = process.env.INSIDE_HOST_HEADER_HOST;
 
+// Configuration of retry failed queries (on WordPress only)
+const RETRY_MAX_COUNT = 3;
+const RETRY_DELAY_MS = 60000;
+
 const insideSites = [];
 const agent = new https.Agent({ rejectUnauthorized: false });
 const authElastic = {
@@ -95,7 +99,7 @@ const setInsideSites = async () => {
         console.log('Total: ' + insideSites.length + ' inside sites to index');
         console.log(insideSites);
       }).catch((error) => {
-        console.error('Error get inside sites: ' + error);
+        console.log('Error get inside sites: ' + error);
         process.exit(1);
       });
   }
@@ -219,23 +223,33 @@ const setKibanaPassword = async () => {
 // Get all pages data of a site
 const getPages = async (site) => {
   let pages = [];
-  let currentPage = 0;
+  let currentPage = 1;
   let totalPage = 0;
 
   do {
-    const response = await axios
-      .get(`https://${INSIDE_HOST}/${site}/wp-json/wp/v2/pages?per_page=100&page=${++currentPage}`, {
-        httpsAgent: agent, headers: { Host: INSIDE_HOST_HEADER_HOST }
-      })
-      .catch((error) => {
-        console.error('Error get pages (site: ' + site + ', page: ' + currentPage + '): ' + error);
-        process.exit(1);
-      });
-    if (totalPage === 0) {
-      totalPage = response.headers['x-wp-totalpages'];
+    for (let i = 0; i <= RETRY_MAX_COUNT; i++) {
+      const response = await axios
+        .get(`https://${INSIDE_HOST}/${site}/wp-json/wp/v2/pages?per_page=100&page=${currentPage}`, {
+          httpsAgent: agent, headers: { Host: INSIDE_HOST_HEADER_HOST }
+        })
+        .catch(async (error) => {
+          console.log('Error get pages (site: ' + site + ', page: ' + currentPage + '): ' + error);
+          if (i === RETRY_MAX_COUNT) {
+            console.log('Max retry count exceeded.');
+            process.exit(1);
+          }
+          console.log('Retrying in ' + RETRY_DELAY_MS + ' milliseconds..');
+          await delay(RETRY_DELAY_MS);
+        });
+      if (response) {
+        if (totalPage === 0) {
+          totalPage = response.headers['x-wp-totalpages'];
+        }
+        pages = pages.concat(response.data);
+        break; // Exit the for loop (retry)
+      }
     }
-    pages = pages.concat(response.data);
-  } while (currentPage < totalPage);
+  } while (currentPage++ < totalPage);
 
   return pages;
 };
@@ -243,23 +257,33 @@ const getPages = async (site) => {
 // Get all medias data of a site
 const getMedias = async (site) => {
   let medias = [];
-  let currentPage = 0;
+  let currentPage = 1;
   let totalPage = 0;
 
   do {
-    const response = await axios
-      .get(`https://${INSIDE_HOST}/${site}/wp-json/wp/v2/media?per_page=100&page=${++currentPage}`, {
-        httpsAgent: agent, headers: { Host: INSIDE_HOST_HEADER_HOST }
-      })
-      .catch((error) => {
-        console.error('Error get medias (page: ' + currentPage + '): ' + error);
-        process.exit(1);
-      });
-    if (totalPage === 0) {
-      totalPage = response.headers['x-wp-totalpages'];
+    for (let i = 0; i <= RETRY_MAX_COUNT; i++) {
+      const response = await axios
+        .get(`https://${INSIDE_HOST}/${site}/wp-json/wp/v2/media?per_page=100&page=${currentPage}`, {
+          httpsAgent: agent, headers: { Host: INSIDE_HOST_HEADER_HOST }
+        })
+        .catch(async (error) => {
+          console.log('Error get medias (site: ' + site + ', page: ' + currentPage + '): ' + error);
+          if (i === RETRY_MAX_COUNT) {
+            console.log('Max retry count exceeded.');
+            process.exit(1);
+          }
+          console.log('Retrying in ' + RETRY_DELAY_MS + ' milliseconds..');
+          await delay(RETRY_DELAY_MS);
+        });
+      if (response) {
+        if (totalPage === 0) {
+          totalPage = response.headers['x-wp-totalpages'];
+        }
+        medias = medias.concat(response.data);
+        break; // Exit the for loop (retry)
+      }
     }
-    medias = medias.concat(response.data);
-  } while (currentPage < totalPage);
+  } while (currentPage++ < totalPage);
 
   return medias;
 };
@@ -286,27 +310,37 @@ const indexMedia = async (fileName, sourceMedia) => {
     // Adapt url return by the API
     const sourceMediaTmp = sourceMedia.replace(INSIDE_HOST_HEADER_HOST, INSIDE_HOST);
 
-    await axios.get(encodeURI(sourceMediaTmp), {
-      responseType: 'arraybuffer', httpsAgent: agent, headers: { Host: INSIDE_HOST_HEADER_HOST }
-    }).then(async (response) => {
-      const data = Buffer.from(response.data, 'binary').toString('base64');
-
-      await axios.post(`${ELASTIC_HOST}/inside/_doc?pipeline=attachment`, {
-        url: `${sourceMedia}`,
-        title: `${fileName}`,
-        data: `${data}`,
-        rights: 'test'
-      }, { maxBodyLength: Infinity, auth: authElastic })
-        .then((result) => {
-          totalMediasIndexed++;
-        }).catch((error) => {
-          console.log('Error POST index attachment: ' + error);
-          process.exit(1);
+    for (let i = 0; i <= RETRY_MAX_COUNT; i++) {
+      const response = await axios
+        .get(encodeURI(sourceMediaTmp), {
+          responseType: 'arraybuffer', httpsAgent: agent, headers: { Host: INSIDE_HOST_HEADER_HOST }
+        }).catch(async (error) => {
+          console.log('Error get media (' + sourceMediaTmp + '): ' + error);
+          if (i === RETRY_MAX_COUNT) {
+            console.log('Max retry count exceeded.');
+            process.exit(1);
+          }
+          console.log('Retrying in ' + RETRY_DELAY_MS + ' milliseconds..');
+          await delay(RETRY_DELAY_MS);
         });
-    }).catch((error) => {
-      console.log('Error get media (' + sourceMediaTmp + '): ' + error);
-      process.exit(1);
-    });
+      if (response) {
+        const data = Buffer.from(response.data, 'binary').toString('base64');
+
+        await axios.post(`${ELASTIC_HOST}/inside/_doc?pipeline=attachment`, {
+          url: `${sourceMedia}`,
+          title: `${fileName}`,
+          data: `${data}`,
+          rights: 'test'
+        }, { maxBodyLength: Infinity, auth: authElastic })
+          .then((result) => {
+            totalMediasIndexed++;
+          }).catch((error) => {
+            console.log('Error post index attachment: ' + error);
+            process.exit(1);
+          });
+        break;
+      }
+    }
   } catch (e) {
     console.log('Error indexMedia: ' + e);
     process.exit(1);
