@@ -76,7 +76,7 @@
       name: search-inside-elastic
       namespace: "{{ openshift_namespace }}"
     spec:
-      replicas: 1
+      replicas: 2
       selector:
         deployment-config.name: search-inside-elastic
       template:
