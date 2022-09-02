@@ -1,4 +1,6 @@
 const axios = require('axios');
+axios.defaults.timeout = 60000;
+
 const htmlEntities = require('html-entities');
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const https = require('https');
