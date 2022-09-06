@@ -174,7 +174,6 @@
     module: shell
     cmd: |
       oc tag wwp-test/search-inside-elastic:latest wwp/search-inside-elastic:prod
-      oc tag wwp-test/search-inside-kibana:latest wwp/search-inside-kibana:prod
       oc tag wwp-test/search-inside-nodeapi:latest wwp/search-inside-nodeapi:prod
   tags: images.promote
 
