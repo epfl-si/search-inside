@@ -2,11 +2,19 @@
 
 SHELL := /bin/bash
 
+TRIVY_IMAGE = aquasec/trivy
+TRIVY_VERSION = 0.29.2
+TRIVY_VCACHE = -v /tmp/trivy/:/root/.cache/
+TRIVY_VLOCAL = -v /var/run/docker.sock:/var/run/docker.sock
+TRIVY = @docker run --rm ${TRIVY_VCACHE} ${TRIVY_VLOCAL} ${TRIVY_IMAGE}:${TRIVY_VERSION}
+
 .PHONY: help
 help:
 	@echo "Main:"
 	@echo "  make help                  — Display this help"
 	@echo "Utilities:"
+	@echo "  make scan                  — Scan images for vulnerabilities"
+	@echo "Local development:"
 	@echo "  make build                 — Build"
 	@echo "  make build-force           — Force build"
 	@echo "  make print-env             — Print environment variables"
@@ -23,6 +31,12 @@ else
 include /keybase/team/epfl_searchins/env
 export
 endif
+
+.PHONY: scan
+scan:
+	@${TRIVY} image --clear-cache
+	@${TRIVY} image --severity HIGH,CRITICAL search-inside_elastic:latest
+	@${TRIVY} image --severity HIGH,CRITICAL search-inside_nodeapi:latest
 
 .PHONY: print-env
 print-env: check-env
