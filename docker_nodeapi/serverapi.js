@@ -85,6 +85,7 @@ app.use(cors(corsOpts));
 app.use(expressSession({
   cookie: {
     secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
     maxAge: 86400000
   },
   store: new MemoryStore({
