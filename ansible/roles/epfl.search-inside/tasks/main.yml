@@ -288,6 +288,8 @@
     metadata:
       name: "{{ searchinside_nodeapi_routename }}"
       namespace: "{{ openshift_namespace }}"
+      annotations:
+        router.openshift.io/cookie-same-site: Strict
     spec:
       host: "{{ searchinside_nodeapi_hostname }}"
       wildcardPolicy: None
