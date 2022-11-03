@@ -289,6 +289,7 @@
       name: "{{ searchinside_nodeapi_routename }}"
       namespace: "{{ openshift_namespace }}"
       annotations:
+        haproxy.router.openshift.io/hsts_header: max-age=15552001
         router.openshift.io/cookie-same-site: Strict
     spec:
       host: "{{ searchinside_nodeapi_hostname }}"
