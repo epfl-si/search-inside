@@ -86,6 +86,7 @@ app.use(cors(corsOpts));
 
 // Security
 app.use(helmet.frameguard());
+app.use(helmet.noSniff());
 
 app.use(expressSession({
   cookie: {
