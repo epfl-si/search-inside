@@ -5,6 +5,7 @@ const nocache = require('nocache');
 const express = require('express');
 const expressSession = require('express-session');
 const morgan = require('morgan');
+const helmet = require('helmet');
 const passport = require('passport');
 
 const MemoryStore = require('memorystore')(expressSession);
@@ -82,6 +83,10 @@ if (process.env.NODE_ENV === 'production') {
 app.use(nocache());
 app.use(morgan('combined'));
 app.use(cors(corsOpts));
+
+// Security
+app.use(helmet.frameguard());
+
 app.use(expressSession({
   cookie: {
     secure: process.env.NODE_ENV === 'production',
