@@ -2,7 +2,7 @@ version: '3.2'
 
 services:
   kibana:
-    image: docker.elastic.co/kibana/kibana:8.3.1
+    image: docker.elastic.co/kibana/kibana:8.10.2
     container_name: search-inside-kibana
     ports:
       - "5601:5601"
