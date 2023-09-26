@@ -1,4 +1,4 @@
-FROM docker-registry.default.svc:5000/wwp-test/node:16-alpine
+FROM docker-registry.default.svc:5000/wwp-test/node:20-alpine
 
 ARG WEB2018_URL=https://web2018.epfl.ch/6.1.1/
 

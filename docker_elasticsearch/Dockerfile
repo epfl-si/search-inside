@@ -29,18 +29,21 @@ RUN \
   apt-get install -yqq --no-install-recommends \
     apt-utils \
     gnupg2 \
-    wget && \
+    curl && \
   rm -rf /var/lib/apt/lists/*
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# Install Node.js 16
+# Install Node.js 20
 RUN \
-  wget -qO- https://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add - && \
-  echo "deb https://deb.nodesource.com/node_16.x focal main" > /etc/apt/sources.list.d/nodesource.list && \
+  mkdir -p /etc/apt/keyrings && \
+  curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | \
+    gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
+  echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" | \
+    tee /etc/apt/sources.list.d/nodesource.list && \
   apt-get update && \
   apt-get install -yqq --no-install-recommends \
-    nodejs=16.* && \
+    nodejs=20.* && \
   rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
