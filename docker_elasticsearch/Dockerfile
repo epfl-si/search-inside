@@ -1,4 +1,4 @@
-FROM docker.elastic.co/elasticsearch/elasticsearch:8.3.1 as build-stage
+FROM docker.elastic.co/elasticsearch/elasticsearch:8.10.2 as build-stage
 
 RUN /usr/share/elasticsearch/bin/elasticsearch-plugin install --batch ingest-attachment
 
@@ -56,7 +56,7 @@ USER elasticsearch
 RUN ./bootstrap-index-build.sh
 
 
-FROM docker.elastic.co/elasticsearch/elasticsearch:8.3.1
+FROM docker.elastic.co/elasticsearch/elasticsearch:8.10.2
 
 RUN /usr/share/elasticsearch/bin/elasticsearch-plugin install --batch ingest-attachment
 
