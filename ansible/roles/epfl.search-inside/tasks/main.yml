@@ -27,6 +27,7 @@
     git:
       repository: "{{ searchinside_git_uri }}"
       path: docker_elasticsearch
+      ref: main
     strategy:
       dockerStrategy:
         env:
@@ -188,6 +189,7 @@
     git:
       repository: "{{ searchinside_git_uri }}"
       path: docker_nodeapi
+      ref: main
   register: _openshift_image_search_inside_nodeapi
 
 - name: NodeJS api - Rebuild image
