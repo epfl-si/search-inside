@@ -45,6 +45,7 @@ print-env: check-env
 	@echo "SEARCH_INSIDE_API_RO_USERNAME=${SEARCH_INSIDE_API_RO_USERNAME}"
 	@echo "SEARCH_INSIDE_API_RO_PASSWORD=${SEARCH_INSIDE_API_RO_PASSWORD}"
 	@echo "SEARCH_INSIDE_KIBANA_PASSWORD=${SEARCH_INSIDE_KIBANA_PASSWORD}"
+	@echo "DOCKER_BUILDKIT=${DOCKER_BUILDKIT}"
 
 set-dockerfile-dev:
 	@cp docker_nodeapi/Dockerfile docker_nodeapi/Dockerfile-dev
@@ -52,17 +53,17 @@ set-dockerfile-dev:
 
 .PHONY: build
 build: set-dockerfile-dev
-	@docker-compose -f docker-compose.elastic-local.yml -f docker-compose.nodeapi.yml -f docker-compose.kibana.yml build
+	@docker compose -f docker-compose.elastic-local.yml -f docker-compose.nodeapi.yml -f docker-compose.kibana.yml build
 
 .PHONY: build-force
 build-force: set-dockerfile-dev
-	@docker-compose -f docker-compose.elastic-local.yml -f docker-compose.nodeapi.yml -f docker-compose.kibana.yml build --force-rm --no-cache --pull
+	@docker compose -f docker-compose.elastic-local.yml -f docker-compose.nodeapi.yml -f docker-compose.kibana.yml build --force-rm --no-cache --pull
 
 .PHONY: local-up
 local-up: check-env
-	@docker-compose -f docker-compose.elastic-local.yml -f docker-compose.nodeapi.yml -f docker-compose.kibana.yml up
+	@docker compose -f docker-compose.elastic-local.yml -f docker-compose.nodeapi.yml -f docker-compose.kibana.yml up
 
 .PHONY: prod-up
 prod-up: check-env
 	@docker login os-docker-registry.epfl.ch
-	@docker-compose -f docker-compose.elastic-prod.yml -f docker-compose.nodeapi.yml -f docker-compose.kibana.yml up
+	@docker compose -f docker-compose.elastic-prod.yml -f docker-compose.nodeapi.yml -f docker-compose.kibana.yml up
