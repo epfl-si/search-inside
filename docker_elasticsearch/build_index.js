@@ -71,6 +71,7 @@ const setInsideSites = async () => {
       });
 
     for (const siteData of sitesFromVeritas.data) {
+      // Get the site name (e.g. 'https://inside.epfl.ch/earl-hacker-tips/' → 'earl-hacker-tips')
       const site = siteData.url.replace(/\/$/, '').split('/').pop();
 
       // For the moment, we only index inside sites that do not have group restrictions (except intranet-epfl)
