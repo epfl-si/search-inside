@@ -1,6 +1,10 @@
 Changelog
 =========
 
+### v1.1.1 / 2023-10-09
+
+  - Refactor code
+  
 ### v1.1.0 / 2023-10-03
 
   - Update Elasticsearch (+ Kibana) to v8.10.2
