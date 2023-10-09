@@ -61,50 +61,49 @@ const setInsideSites = async () => {
       insideSites.push(site);
     }
   } else {
-    // Get the list to index in WP Veritas
-    await axios
+    // Get the inside sites to index from WP Veritas
+    const sitesFromVeritas = await axios
       .get(
         `https://${WP_VERITAS_HOST}/api/v1/categories/Inside/sites`
-      ).then(async (response) => {
-        for (const siteData of response.data) {
-          const site = siteData.url.replace(/\/$/, '').split('/').pop();
-          // For V1 - We index only inside sites that do no have group restrictions (except intranet-epfl)
-          await axios
-            .get(
-              `https://${INSIDE_HOST}/${site}/wp-json/epfl-intranet/v1/groups`,
-              { httpsAgent: agent, headers: { Host: INSIDE_HOST_HEADER_HOST } }
-            ).then(async (response) => {
-              for (const group of response.data) {
-                const groupName = group.group_name;
-                if (restrictedGroupNameAuthorized.includes(groupName)) {
-                  // Site with no specific group restriction
-                  await axios
-                    .get(
-                      `https://${INSIDE_HOST}/${site}/wp-json/epfl/v1/coming-soon`,
-                      { httpsAgent: agent, headers: { Host: INSIDE_HOST_HEADER_HOST } }
-                    ).then((response) => {
-                      if (response.data.status === '0') {
-                        // Index the site only if plugin epfl-coming-soon is not activated
-                        insideSites.push(site);
-                      }
-                    }).catch((error) => {
-                      console.log('Error get coming-soon status (site: ' + site + '): ' + error);
-                      process.exit(1);
-                    });
-                  break;
-                }
-              }
-            }).catch((error) => {
-              console.log('Error get inside restricted groups (site: ' + site + '): ' + error);
-              process.exit(1);
-            });
-        }
-        console.log('Total: ' + insideSites.length + ' inside sites to index');
-        console.log(insideSites);
-      }).catch((error) => {
+      ).catch((error) => {
         console.log('Error get inside sites: ' + error);
         process.exit(1);
       });
+
+    for (const siteData of sitesFromVeritas.data) {
+      const site = siteData.url.replace(/\/$/, '').split('/').pop();
+
+      // For the moment, we only index inside sites that do not have group restrictions (except intranet-epfl)
+      const GroupsResponse = await axios
+        .get(
+          `https://${INSIDE_HOST}/${site}/wp-json/epfl-intranet/v1/groups`,
+          { httpsAgent: agent, headers: { Host: INSIDE_HOST_HEADER_HOST } }
+        ).catch((error) => {
+          console.log('Error get inside restricted groups (site: ' + site + '): ' + error);
+          process.exit(1);
+        });
+
+      for (const group of GroupsResponse.data) {
+        const groupName = group.group_name;
+        if (restrictedGroupNameAuthorized.includes(groupName)) {
+          const comingSoonResponse = await axios
+            .get(
+              `https://${INSIDE_HOST}/${site}/wp-json/epfl/v1/coming-soon`,
+              { httpsAgent: agent, headers: { Host: INSIDE_HOST_HEADER_HOST } }
+            ).catch((error) => {
+              console.log('Error get coming-soon status (site: ' + site + '): ' + error);
+              process.exit(1);
+            });
+          if (comingSoonResponse.data.status === '0') {
+            // Index the site only if plugin epfl-coming-soon is not activated
+            insideSites.push(site);
+          }
+          break;
+        }
+      }
+    }
+    console.log('Total: ' + insideSites.length + ' inside sites to index');
+    console.log(insideSites);
   }
 };
 
