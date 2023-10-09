@@ -74,7 +74,7 @@ const setInsideSites = async () => {
       const site = siteData.url.replace(/\/$/, '').split('/').pop();
 
       // For the moment, we only index inside sites that do not have group restrictions (except intranet-epfl)
-      const GroupsResponse = await axios
+      const groupsResponse = await axios
         .get(
           `https://${INSIDE_HOST}/${site}/wp-json/epfl-intranet/v1/groups`,
           { httpsAgent: agent, headers: { Host: INSIDE_HOST_HEADER_HOST } }
@@ -83,7 +83,7 @@ const setInsideSites = async () => {
           process.exit(1);
         });
 
-      for (const group of GroupsResponse.data) {
+      for (const group of groupsResponse.data) {
         const groupName = group.group_name;
         if (restrictedGroupNameAuthorized.includes(groupName)) {
           const comingSoonResponse = await axios
