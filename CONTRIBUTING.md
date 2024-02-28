@@ -12,7 +12,7 @@ Prerequisites
 Setup
 -----
 
-If you want to build the index locally (which is stored inside the Elastic image), you can define a restricted list of inside sites to be indexed (for the local build), in the value `INSIDE_SITES_TO_INDEX` (comma-delimited) in [docker-compose.elastic-local.yml](docker-compose.elastic-local.yml).
+If you want to build the index locally (which is stored inside the Elastic image), you can define a restricted list of inside sites to be indexed within the value of `INSIDE_SITES_TO_INDEX` (comma-delimited) in [docker-compose.elastic-local.yml](docker-compose.elastic-local.yml).
 
 Otherwise, you can run with production Elastic image from OpenShift who contains the production index data (see 'Build / Run' section).
 
