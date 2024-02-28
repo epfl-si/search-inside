@@ -53,11 +53,19 @@ set-dockerfile-dev:
 
 .PHONY: build
 build: set-dockerfile-dev
+	@oc login https://pub-os-exopge.epfl.ch --username ${USER} -n wwp
+	@oc port-forward services/httpd-inside 8443:8443 &
+	@sleep 5
 	@docker compose -f docker-compose.elastic-local.yml -f docker-compose.nodeapi.yml -f docker-compose.kibana.yml build
+	@pkill oc -9
 
 .PHONY: build-force
 build-force: set-dockerfile-dev
+	@oc login https://pub-os-exopge.epfl.ch --username ${USER} -n wwp
+	@oc port-forward services/httpd-inside 8443:8443 &
+	@sleep 5
 	@docker compose -f docker-compose.elastic-local.yml -f docker-compose.nodeapi.yml -f docker-compose.kibana.yml build --force-rm --no-cache --pull
+	@pkill oc -9
 
 .PHONY: local-up
 local-up: check-env

@@ -4,15 +4,15 @@ services:
   elastic:
     build:
       context: ./docker_elasticsearch
-      network: wp-local_default
+      network: host
       dockerfile: Dockerfile
       args:
         - SEARCH_INSIDE_API_RO_USERNAME=${SEARCH_INSIDE_API_RO_USERNAME}
         - SEARCH_INSIDE_API_RO_PASSWORD=${SEARCH_INSIDE_API_RO_PASSWORD}
         - SEARCH_INSIDE_KIBANA_PASSWORD=${SEARCH_INSIDE_KIBANA_PASSWORD}
-        - INSIDE_HOST=wp-httpd:8443
-        - INSIDE_HOST_HEADER_HOST=wp-httpd
-        - INSIDE_SITES_TO_INDEX=help-wordpress
+        - INSIDE_HOST=localhost:8443
+        - INSIDE_HOST_HEADER_HOST=inside.epfl.ch
+        # - INSIDE_SITES_TO_INDEX=si-surveys,internalhr-new
     container_name: search-inside-elastic
     environment:
       - bootstrap.memory_lock=true

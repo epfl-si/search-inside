@@ -12,20 +12,20 @@ Prerequisites
 Setup
 -----
 
-If you want to build the index locally (who is stored inside the Elastic image), it's better to crawl website(s) from local WordPress instance (see [wp-dev](https://github.com/epfl-si/wp-dev/)) to avoid API access permissions issues. Adapt following environment variables in [docker-compose.elastic-local.yml](docker-compose.elastic-local.yml):  
-  * `INSIDE_HOST` (inside url, 1st level)
-  * `INSIDE_HOST_HEADER_HOST`
-  * `INSIDE_SITES_TO_INDEX` (comma-delimited sites to index)
+If you want to build the index locally (which is stored inside the Elastic image), you can define a restricted list of inside sites to be indexed within the value of `INSIDE_SITES_TO_INDEX` (comma-delimited) in [docker-compose.elastic-local.yml](docker-compose.elastic-local.yml).
 
 Otherwise, you can run with production Elastic image from OpenShift who contains the production index data (see 'Build / Run' section).
 
 Build / Run
 -----------
 
-Run with **local** Elastic image  
+Build Elastic image (locally)
+`make build[-force]`
+
+Run with **local** Elastic image
 `make local-up`
 
-Run with **production** Elastic image  
+Run with **production** Elastic image (built on Openshift)
 `make prod-up`
 
 Deploy
