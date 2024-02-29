@@ -1,5 +1,4 @@
-ARG IMAGE_REPO=docker-registry.default.svc:5000/wwp-test/
-FROM ${IMAGE_REPO}node:20-alpine
+FROM docker-registry.default.svc:5000/wwp-test/node:20-alpine
 
 ARG WEB2018_URL=https://web2018.epfl.ch/6.1.1/
 
