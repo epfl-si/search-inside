@@ -47,12 +47,8 @@ print-env: check-env
 	@echo "SEARCH_INSIDE_KIBANA_PASSWORD=${SEARCH_INSIDE_KIBANA_PASSWORD}"
 	@echo "DOCKER_BUILDKIT=${DOCKER_BUILDKIT}"
 
-set-dockerfile-dev:
-	@cp docker_nodeapi/Dockerfile docker_nodeapi/Dockerfile-dev
-	@sed -i 's#docker-registry.default.svc:5000/wwp-test/##g' docker_nodeapi/Dockerfile-dev
-
 .PHONY: build
-build: set-dockerfile-dev
+build:
 	@oc login https://pub-os-exopge.epfl.ch --username ${USER} -n wwp
 	@oc port-forward services/httpd-inside 8443:8443 &
 	@sleep 5
@@ -60,7 +56,7 @@ build: set-dockerfile-dev
 	@pkill oc -9
 
 .PHONY: build-force
-build-force: set-dockerfile-dev
+build-force:
 	@oc login https://pub-os-exopge.epfl.ch --username ${USER} -n wwp
 	@oc port-forward services/httpd-inside 8443:8443 &
 	@sleep 5
