@@ -4,7 +4,8 @@ services:
   nodeapi:
     build:
       context: ./docker_nodeapi
-      dockerfile: Dockerfile-dev
+      args:
+        - IMAGE_REPO=docker.io/
     container_name: search-inside-nodeapi
     environment:
       - SEARCH_INSIDE_SEARCH_URL=http://localhost:3000
