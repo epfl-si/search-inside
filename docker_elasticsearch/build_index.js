@@ -460,7 +460,6 @@ const build = async () => {
   await setKibanaPassword();
   await indexAllPages();
   await indexAllMedias();
-  await delay(2000);
   console.log('\nIndex successfully created.\n');
   console.log('*********************************************************');
   console.timeEnd('Duration');
