@@ -15,9 +15,10 @@ const WP_VERITAS_HOST = process.env.WP_VERITAS_HOST;
 const INSIDE_HOST = process.env.INSIDE_HOST;
 const INSIDE_HOST_HEADER_HOST = process.env.INSIDE_HOST_HEADER_HOST;
 
-// Configuration of retry failed queries (on WordPress only)
-const RETRY_MAX_COUNT = 3;
-const RETRY_DELAY_MS = 60000;
+const MAX_RETRIES_WP_API = 3;
+const MAX_RETRIES_ELASTIC = 3;
+const RETRY_WP_API_DELAY_MS = 60000;
+const RETRY_ELASTIC_DELAY_MS = 10000;
 
 const insideSites = [];
 const agent = new https.Agent({ rejectUnauthorized: false });
@@ -26,7 +27,8 @@ const authElastic = {
   password: SEARCH_INSIDE_ELASTIC_PASSWORD
 };
 
-let retryCount = 0;
+let retryWpApiCount = 0;
+let retryElasticCount = 0;
 let totalPagesIndexed = 0;
 let totalMediasIndexed = 0;
 
@@ -237,12 +239,12 @@ const getPages = async (site) => {
         })
         .catch(async (error) => {
           console.log('Error get pages (site: ' + site + ', page: ' + currentPage + '): ' + error);
-          if (retryCount++ === RETRY_MAX_COUNT) {
+          if (retryWpApiCount++ === MAX_RETRIES_WP_API) {
             console.log('Max retry count exceeded.');
             process.exit(1);
           }
-          console.log('Retrying in ' + RETRY_DELAY_MS + 'ms.. (retryCount: ' + retryCount + ')');
-          await delay(RETRY_DELAY_MS);
+          console.log('Retrying in ' + RETRY_WP_API_DELAY_MS + 'ms.. (retry: ' + retryWpApiCount + ')');
+          await delay(RETRY_WP_API_DELAY_MS);
         });
       if (response) {
         if (totalPage === 0) {
@@ -271,12 +273,12 @@ const getMedias = async (site) => {
         })
         .catch(async (error) => {
           console.log('Error get medias (site: ' + site + ', page: ' + currentPage + '): ' + error);
-          if (retryCount++ === RETRY_MAX_COUNT) {
+          if (retryWpApiCount++ === MAX_RETRIES_WP_API) {
             console.log('Max retry count exceeded.');
             process.exit(1);
           }
-          console.log('Retrying in ' + RETRY_DELAY_MS + 'ms.. (retryCount: ' + retryCount + ')');
-          await delay(RETRY_DELAY_MS);
+          console.log('Retrying in ' + RETRY_WP_API_DELAY_MS + 'ms.. (retry: ' + retryWpApiCount + ')');
+          await delay(RETRY_WP_API_DELAY_MS);
         });
       if (response) {
         if (totalPage === 0) {
@@ -319,29 +321,38 @@ const indexMedia = async (fileName, sourceMedia) => {
           responseType: 'arraybuffer', httpsAgent: agent, headers: { Host: INSIDE_HOST_HEADER_HOST }
         }).catch(async (error) => {
           console.log('Error get media (' + sourceMediaTmp + '): ' + error);
-          if (retryCount++ === RETRY_MAX_COUNT) {
+          if (retryWpApiCount++ === MAX_RETRIES_WP_API) {
             console.log('Max retry count exceeded.');
             process.exit(1);
           }
-          console.log('Retrying in ' + RETRY_DELAY_MS + 'ms.. (retryCount: ' + retryCount + ')');
-          await delay(RETRY_DELAY_MS);
+          console.log('Retrying in ' + RETRY_WP_API_DELAY_MS + 'ms.. (retry: ' + retryWpApiCount + ')');
+          await delay(RETRY_WP_API_DELAY_MS);
         });
       if (response) {
         const data = Buffer.from(response.data, 'binary').toString('base64');
 
-        await axios.post(`${ELASTIC_HOST}/inside/_doc?pipeline=attachment`, {
-          url: `${sourceMedia}`,
-          title: `${fileName}`,
-          data: `${data}`,
-          rights: 'test'
-        }, { maxBodyLength: Infinity, auth: authElastic })
-          .then((result) => {
+        while (true) {
+          const elasticResponse = await axios.post(`${ELASTIC_HOST}/inside/_doc?pipeline=attachment`, {
+            url: `${sourceMedia}`,
+            title: `${fileName}`,
+            data: `${data}`,
+            rights: 'test'
+          }, { maxBodyLength: Infinity, auth: authElastic })
+            .catch(async (error) => {
+              console.log('Error post index attachment: ' + error);
+              if (retryElasticCount++ === MAX_RETRIES_ELASTIC) {
+                console.log('Max retry count exceeded.');
+                process.exit(1);
+              }
+              console.log('Retrying in ' + RETRY_ELASTIC_DELAY_MS + 'ms.. (retry: ' + retryElasticCount + ')');
+              await delay(RETRY_ELASTIC_DELAY_MS);
+            });
+          if (elasticResponse) {
             totalMediasIndexed++;
-          }).catch((error) => {
-            console.log('Error post index attachment: ' + error);
-            process.exit(1);
-          });
-        break; // Exit the while loop (retry)
+            break; // Exit the inner loop
+          }
+        }
+        break; // Exit the outer loop
       }
     }
   } catch (e) {
@@ -450,7 +461,7 @@ const build = async () => {
   await indexAllPages();
   await indexAllMedias();
   await delay(2000);
-  console.log('\nBuild index sucessful.\n');
+  console.log('\nIndex successfully created.\n');
   console.log('*********************************************************');
   console.timeEnd('Duration');
   console.log(totalPagesIndexed + ' pages indexed.');
