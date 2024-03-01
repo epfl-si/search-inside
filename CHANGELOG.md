@@ -1,6 +1,11 @@
 Changelog
 =========
 
+### v1.1.2 / 2024-03-01
+
+  - Implement retries on index a media
+  - Index production sites when local build
+
 ### v1.1.1 / 2023-10-09
 
   - Refactor code
