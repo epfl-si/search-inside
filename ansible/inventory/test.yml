@@ -1,0 +1,6 @@
+wwp-test-group:
+  hosts:
+    wwp-test:
+      openshift_namespace: 'wwp-test'
+      ansible_connection: local
+      ansible_python_interpreter: '{{elasticsible_suitcase_dir}}/bin/python3'

@@ -1,2 +1,0 @@
-[wwp-test-group]
-wwp-test      ansible_connection=local  ansible_python_interpreter={{elasticsible_suitcase_dir}}/bin/python3  openshift_namespace=wwp-test

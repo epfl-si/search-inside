@@ -1,0 +1,6 @@
+wwp-group:
+  hosts:
+    wwp:
+      openshift_namespace: 'wwp'
+      ansible_connection: local
+      ansible_python_interpreter: '{{elasticsible_suitcase_dir}}/bin/python3'
