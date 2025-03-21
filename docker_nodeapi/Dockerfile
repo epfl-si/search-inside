@@ -19,6 +19,9 @@ RUN \
     node_modules/passport-tequila/lib/passport-tequila/protocol.js && \
   sed -i \
     "s/x-forwarded-host/x-tequila-redirect-path/" \
+    node_modules/passport-tequila/lib/passport-tequila/protocol.js && \
+  sed -i \
+    "s/auth_check: auth_check/auth_check: auth_check, allowedrequesthosts: '10.180.21.0\/24'/" \
     node_modules/passport-tequila/lib/passport-tequila/protocol.js
 
 COPY serverapi.js /app
