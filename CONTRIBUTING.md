@@ -41,7 +41,7 @@ Rebuild Elastic image
 `./ansible/elasticsible -t elastic.rebuild`
 
 Rebuild NodeJS API image  
-`./ansible/elasticsible -t nodeapi.rebuild`
+`./ansible/elasticsible -t api.rebuild`
 
 Promote images  
 `./ansible/elasticsible -t images.promote --prod`

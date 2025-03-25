@@ -45,7 +45,7 @@
           git:
             uri: "{{ search_inside_api_git_uri }}"
             ref: "{{ search_inside_api_git_branch }}"
-          contextDir: docker_nodeapi
+          contextDir: docker_api
         strategy:
           type: Docker
           dockerStrategy:
