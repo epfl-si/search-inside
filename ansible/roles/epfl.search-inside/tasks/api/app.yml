@@ -141,7 +141,7 @@
       metadata:
         labels:
           app: search-inside-api
-          route: public
+          route: private
         name: "{{ search_inside_api_hostname }}"
         namespace: "{{ openshift_namespace }}"
         annotations:
