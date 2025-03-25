@@ -45,7 +45,7 @@
           git:
             uri: "{{ search_inside_elastic_git_uri }}"
             ref: "{{ search_inside_elastic_git_branch }}"
-          contextDir: docker_elasticsearch
+          contextDir: docker_elastic
         strategy:
           type: Docker
           dockerStrategy:

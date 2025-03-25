@@ -1,7 +1,7 @@
 services:
   elastic:
     build:
-      context: ./docker_elasticsearch
+      context: ./docker_elastic
       network: host
       args:
         - SEARCH_INSIDE_API_RO_USERNAME=${SEARCH_INSIDE_API_RO_USERNAME}
