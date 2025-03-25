@@ -43,8 +43,8 @@
         source:
           type: Git
           git:
-            uri: "{{ search_inside_elastic_git_uri }}"
-            ref: "{{ search_inside_elastic_git_branch }}"
+            uri: "{{ search_inside_git_uri }}"
+            ref: "{{ search_inside_git_branch }}"
           contextDir: docker_elastic
         strategy:
           type: Docker
@@ -71,7 +71,7 @@
         output:
           to:
             kind: DockerImage
-            name: "{{ search_inside_elastic_image }}"
+            name: "{{ elastic_image }}"
         resources:
           requests:
             cpu: "1"

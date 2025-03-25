@@ -49,7 +49,7 @@
           spec:
             serviceAccountName: search-inside-elastic
             containers:
-              - image: "{{ search_inside_elastic_image }}"
+              - image: "{{ elastic_image }}"
                 imagePullPolicy: Always
                 name: search-inside-elastic
                 ports:

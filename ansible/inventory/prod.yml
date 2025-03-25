@@ -6,17 +6,15 @@ all:
       ansible_python_interpreter: "{{ ansible_playbook_python }}"
       inventory_environment: prod
   vars:
-    quay_host: quay-its.epfl.ch
-    quay_repo_name: svc0012
-    search_inside_api_hostname: search-inside-api.epfl.ch
-    search_inside_api_image_name: search-inside-api
-    search_inside_api_image_tag: prod
-    search_inside_api_image: "{{ quay_host }}/{{ quay_repo_name }}/{{ search_inside_api_image_name }}:{{ search_inside_api_image_tag }}"
-    search_inside_api_git_uri: https://github.com/epfl-si/search-inside
-    search_inside_api_git_branch: main
-    search_inside_api_search_url: https://search.epfl.ch
-    search_inside_elastic_image_name: search-inside-elastic
-    search_inside_elastic_image_tag: prod
-    search_inside_elastic_image: "{{ quay_host }}/{{ quay_repo_name }}/{{ search_inside_elastic_image_name }}:{{ search_inside_elastic_image_tag }}"
-    search_inside_elastic_git_uri: https://github.com/epfl-si/search-inside
-    search_inside_elastic_git_branch: main
+    quay_registry: quay-its.epfl.ch/svc0012
+    search_inside_git_uri: https://github.com/epfl-si/search-inside
+    search_inside_git_branch: main
+    api_hostname: search-inside-api.epfl.ch
+    api_image_name: search-inside-api
+    api_image_tag: prod
+    api_image: "{{ quay_registry }}/{{ api_image_name }}:{{ api_image_tag }}"
+    api_search_url: https://search.epfl.ch
+    elastic_image_name: search-inside-elastic
+    elastic_image_tag: prod
+    elastic_image: "{{ quay_registry }}/{{ elastic_image_name }}:{{ elastic_image_tag }}"
+

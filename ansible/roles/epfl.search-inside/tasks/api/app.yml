@@ -49,7 +49,7 @@
           spec:
             serviceAccountName: search-inside-api
             containers:
-              - image: "{{ search_inside_api_image }}"
+              - image: "{{ api_image }}"
                 imagePullPolicy: Always
                 name: search-inside-api
                 ports:
@@ -65,7 +65,7 @@
                   - name: SEARCH_INSIDE_ELASTICSEARCH_URL
                     value: 'http://search-inside-elastic.{{ openshift_namespace }}.svc:9200'
                   - name: SEARCH_INSIDE_SEARCH_URL
-                    value: "{{ search_inside_api_search_url }}"
+                    value: "{{ api_search_url }}"
                   - name: SEARCH_INSIDE_ALLOW_EXTERNAL
                     value: 'False'
                   - name: NODE_ENV
@@ -142,13 +142,13 @@
         labels:
           app: search-inside-api
           route: private
-        name: "{{ search_inside_api_hostname }}"
+        name: "{{ api_hostname }}"
         namespace: "{{ openshift_namespace }}"
         annotations:
           haproxy.router.openshift.io/balance: roundrobin
           haproxy.router.openshift.io/disable_cookies: 'true'
       spec:
-        host: "{{ search_inside_api_hostname }}"
+        host: "{{ api_hostname }}"
         to:
           kind: Service
           name: search-inside-api
