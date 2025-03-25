@@ -3,7 +3,6 @@ services:
     build:
       context: ./docker_elasticsearch
       network: host
-      dockerfile: Dockerfile
       args:
         - SEARCH_INSIDE_API_RO_USERNAME=${SEARCH_INSIDE_API_RO_USERNAME}
         - SEARCH_INSIDE_API_RO_PASSWORD=${SEARCH_INSIDE_API_RO_PASSWORD}
