@@ -1,0 +1,89 @@
+- name: Elastic - Include Secrets
+  include_tasks:
+    file: 'secrets.yml'
+
+- name: Elastic - Builder Pull Secret
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: v1
+      kind: Secret
+      type: kubernetes.io/dockerconfigjson
+      metadata:
+        name: search-inside-elastic-builder-pull-secret
+        namespace: "{{ openshift_namespace }}"
+      data:
+        .dockerconfigjson: "{{ pull_secret_elastic_builder_config | to_json | b64encode }}"
+
+- name: Elastic - Builder Service Account
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: search-inside-elastic-builder
+        namespace: "{{ openshift_namespace }}"
+      secrets:
+        - name: search-inside-elastic-builder-pull-secret
+      # This is not supposed to be required (it worked without in
+      # OpenShift 4.14); but see
+      # https://access.redhat.com/solutions/7098226
+      imagePullSecrets:
+        - name: search-inside-elastic-builder-pull-secret
+
+- name: Elastic - Build Config
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: build.openshift.io/v1
+      kind: BuildConfig
+      metadata:
+        name: search-inside-elastic
+        namespace: "{{ openshift_namespace }}"
+      spec:
+        serviceAccount: search-inside-elastic-builder
+        source:
+          type: Git
+          git:
+            uri: "{{ search_inside_elastic_git_uri }}"
+            ref: "{{ search_inside_elastic_git_branch }}"
+          contextDir: docker_elasticsearch
+        strategy:
+          type: Docker
+          dockerStrategy:
+            forcePull: true
+            env:
+              - name: SEARCH_INSIDE_KIBANA_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: search-inside-elastic-secrets
+                    key: SEARCH_INSIDE_KIBANA_PASSWORD
+              - name: SEARCH_INSIDE_API_RO_USERNAME
+                valueFrom:
+                  secretKeyRef:
+                    name: search-inside-elastic-secrets
+                    key: SEARCH_INSIDE_API_RO_USERNAME
+              - name: SEARCH_INSIDE_API_RO_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: search-inside-elastic-secrets
+                    key: SEARCH_INSIDE_API_RO_PASSWORD
+        triggers:
+          - type: ConfigChange
+        output:
+          to:
+            kind: DockerImage
+            name: "{{ search_inside_elastic_image }}"
+        resources:
+          requests:
+            cpu: "1"
+            memory: "4Gi"
+          limits:
+            cpu: "1"
+            memory: "4Gi"
+
+- name: Elastic - Start build
+  when: >-
+    "elastic.startbuild" in ansible_run_tags
+  shell:
+    cmd: "oc -n {{ openshift_namespace }} start-build --wait search-inside-elastic"
+  tags:
+    - elastic.startbuild

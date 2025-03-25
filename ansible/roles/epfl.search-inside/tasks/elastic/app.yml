@@ -1,0 +1,134 @@
+- name: Elastic - Include Secrets
+  include_tasks:
+    file: 'secrets.yml'
+
+- name: Elastic - Pull Secret
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: v1
+      kind: Secret
+      type: kubernetes.io/dockerconfigjson
+      metadata:
+        name: search-inside-elastic-pull-secret
+        namespace: "{{ openshift_namespace }}"
+      data:
+        .dockerconfigjson: "{{ pull_secret_elastic_config | to_json | b64encode }}"
+
+- name: Elastic - Service Account
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: search-inside-elastic
+        namespace: "{{ openshift_namespace }}"
+      imagePullSecrets:
+        - name: search-inside-elastic-pull-secret
+
+- name: Elastic - Deployment
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: search-inside-elastic
+        namespace: "{{ openshift_namespace }}"
+      spec:
+        replicas: 1
+        strategy:
+          type: RollingUpdate
+          rollingUpdate:
+            maxUnavailable: 0
+        selector:
+          matchLabels:
+            app: search-inside-elastic
+        template:
+          metadata:
+            labels:
+              app: search-inside-elastic
+          spec:
+            serviceAccountName: search-inside-elastic
+            containers:
+              - image: "{{ search_inside_elastic_image }}"
+                imagePullPolicy: Always
+                name: search-inside-elastic
+                ports:
+                  - containerPort: 9200
+                resources:
+                  requests:
+                    cpu: "1"
+                    memory: "4Gi"
+                  limits:
+                    cpu: "1"
+                    memory: "4Gi"
+                env:
+                  - name: bootstrap.memory_lock
+                    value: 'true'
+                  - name: ES_JAVA_OPTS
+                    value: '-Xms2g -Xmx2g'
+                  - name: xpack.security.enabled
+                    value: 'true'
+                  - name: ELASTIC_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: search-inside-elastic-secrets
+                        key: SEARCH_INSIDE_ELASTIC_PASSWORD
+                  - name: discovery.type
+                    value: 'single-node'
+                livenessProbe:
+                  tcpSocket:
+                    port: 9200
+                  initialDelaySeconds: 5
+                  timeoutSeconds: 3
+                readinessProbe:
+                  exec:
+                    command:
+                      - sh
+                      - -c
+                      - |
+                        #!/usr/bin/env/bash
+                        if curl -u {{ search_inside_api_ro_username }}:{{ search_inside_api_ro_password }} http://localhost:9200/; then
+                          exit 0
+                        else
+                          exit 1
+                        fi
+                  initialDelaySeconds: 30
+                  timeoutSeconds: 30
+                  periodSeconds: 30
+
+- name: Elastic - Restart
+  when: >-
+    "elastic.restart" in ansible_run_tags
+  kubernetes.core.k8s:
+    state: patched
+    kind: Deployment
+    definition:
+      metadata:
+        name: search-inside-elastic
+        namespace: "{{ openshift_namespace }}"
+      spec:
+        template:
+          metadata:
+            annotations:
+              last-restart: "{{ lookup('pipe', 'date -u +%Y-%m-%dT%H:%M:%SZ') }}"
+  tags: elastic.restart
+
+- name: Elastic - Service
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: v1
+      kind: Service
+      metadata:
+        labels:
+          app: search-inside-elastic
+        name: search-inside-elastic
+        namespace: "{{ openshift_namespace }}"
+      spec:
+        ports:
+          - name: 9200-tcp
+            port: 9200
+            protocol: TCP
+            targetPort: 9200
+        selector:
+          app: search-inside-elastic
+        type: ClusterIP

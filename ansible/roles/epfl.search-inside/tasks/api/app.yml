@@ -1,0 +1,160 @@
+- name: API - Include Secrets
+  include_tasks:
+    file: 'secrets.yml'
+
+- name: API - Pull Secret
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: v1
+      kind: Secret
+      type: kubernetes.io/dockerconfigjson
+      metadata:
+        name: search-inside-api-pull-secret
+        namespace: "{{ openshift_namespace }}"
+      data:
+        .dockerconfigjson: "{{ pull_secret_api_config | to_json | b64encode }}"
+
+- name: API - Service Account
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: search-inside-api
+        namespace: "{{ openshift_namespace }}"
+      imagePullSecrets:
+        - name: search-inside-api-pull-secret
+
+- name: API - Deployment
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: search-inside-api
+        namespace: "{{ openshift_namespace }}"
+      spec:
+        replicas: 1
+        strategy:
+          type: RollingUpdate
+          rollingUpdate:
+            maxUnavailable: 0
+        selector:
+          matchLabels:
+            app: search-inside-api
+        template:
+          metadata:
+            labels:
+              app: search-inside-api
+          spec:
+            serviceAccountName: search-inside-api
+            containers:
+              - image: "{{ search_inside_api_image }}"
+                imagePullPolicy: Always
+                name: search-inside-api
+                ports:
+                  - containerPort: 4444
+                resources:
+                  requests:
+                    cpu: "100m"
+                    memory: "128Mi"
+                  limits:
+                    cpu: "250m"
+                    memory: "256Mi"
+                env:
+                  - name: SEARCH_INSIDE_ELASTICSEARCH_URL
+                    value: 'http://search-inside-elastic.{{ openshift_namespace }}.svc:9200'
+                  - name: SEARCH_INSIDE_SEARCH_URL
+                    value: "{{ search_inside_api_search_url }}"
+                  - name: SEARCH_INSIDE_ALLOW_EXTERNAL
+                    value: 'False'
+                  - name: NODE_ENV
+                    value: 'production'
+                  - name: SEARCH_INSIDE_SESSION_SECRET
+                    valueFrom:
+                      secretKeyRef:
+                        name: search-inside-api-secrets
+                        key: SEARCH_INSIDE_SESSION_SECRET
+                  - name: SEARCH_INSIDE_API_RO_USERNAME
+                    valueFrom:
+                      secretKeyRef:
+                        name: search-inside-api-secrets
+                        key: SEARCH_INSIDE_API_RO_USERNAME
+                  - name: SEARCH_INSIDE_API_RO_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: search-inside-api-secrets
+                        key: SEARCH_INSIDE_API_RO_PASSWORD
+                livenessProbe:
+                  tcpSocket:
+                    port: 4444
+                  initialDelaySeconds: 5
+                  timeoutSeconds: 3
+                readinessProbe:
+                  tcpSocket:
+                    port: 4444
+                  initialDelaySeconds: 5
+                  timeoutSeconds: 3
+
+- name: API - Restart
+  when: >-
+    "api.restart" in ansible_run_tags
+  kubernetes.core.k8s:
+    state: patched
+    kind: Deployment
+    definition:
+      metadata:
+        name: search-inside-api
+        namespace: "{{ openshift_namespace }}"
+      spec:
+        template:
+          metadata:
+            annotations:
+              last-restart: "{{ lookup('pipe', 'date -u +%Y-%m-%dT%H:%M:%SZ') }}"
+  tags: api.restart
+
+- name: API - Service
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: v1
+      kind: Service
+      metadata:
+        labels:
+          app: search-inside-api
+        name: search-inside-api
+        namespace: "{{ openshift_namespace }}"
+      spec:
+        ports:
+          - name: 4444-tcp
+            port: 4444
+            protocol: TCP
+            targetPort: 4444
+        selector:
+          app: search-inside-api
+        type: ClusterIP
+
+- name: API - Route
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: route.openshift.io/v1
+      kind: Route
+      metadata:
+        labels:
+          app: search-inside-api
+          route: public
+        name: "{{ search_inside_api_hostname }}"
+        namespace: "{{ openshift_namespace }}"
+        annotations:
+          haproxy.router.openshift.io/balance: roundrobin
+          haproxy.router.openshift.io/disable_cookies: 'true'
+      spec:
+        host: "{{ search_inside_api_hostname }}"
+        to:
+          kind: Service
+          name: search-inside-api
+          weight: 100
+        port:
+          targetPort: 4444-tcp
+        tls:
+          termination: edge
+          insecureEdgeTerminationPolicy: Redirect

@@ -1,4 +1,4 @@
-FROM docker-registry.default.svc:5000/wwp-test/node:20-alpine
+FROM quay-its.epfl.ch/svc0012/node:20-alpine
 
 ARG WEB2018_URL=https://web2018.epfl.ch/6.1.1/
 
