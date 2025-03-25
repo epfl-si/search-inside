@@ -10,7 +10,7 @@
   tags:
     - api
     - api.image
-    - api.startbuild
+    - api.image.startbuild
 
 - name: API - App
   include_tasks:
@@ -22,7 +22,7 @@
   tags:
     - api
     - api.app
-    - api.restart
+    - api.app.restart
 
 - name: Elastic - Image
   when:
@@ -32,9 +32,11 @@
     apply:
       tags:
         - elastic
+        - elastic.image
   tags:
     - elastic
-    - elastic.startbuild
+    - elastic.image
+    - elastic.image.startbuild
 
 - name: Elastic - App
   include_tasks:
@@ -42,6 +44,8 @@
     apply:
       tags:
         - elastic
+        - elastic.app
   tags:
     - elastic
-    - elastic.restart
+    - elastic.app
+    - elastic.app.restart

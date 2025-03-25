@@ -98,7 +98,7 @@
 
 - name: Elastic - Restart
   when: >-
-    "elastic.restart" in ansible_run_tags
+    "elastic.app.restart" in ansible_run_tags
   kubernetes.core.k8s:
     state: patched
     kind: Deployment
@@ -111,7 +111,7 @@
           metadata:
             annotations:
               last-restart: "{{ lookup('pipe', 'date -u +%Y-%m-%dT%H:%M:%SZ') }}"
-  tags: elastic.restart
+  tags: elastic.app.restart
 
 - name: Elastic - Service
   kubernetes.core.k8s:
