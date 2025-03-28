@@ -141,7 +141,7 @@
       metadata:
         labels:
           app: search-inside-api
-          route: private
+          route: "{{ avi_route_access_level }}"
         name: "{{ api_hostname }}"
         namespace: "{{ openshift_namespace }}"
         annotations:

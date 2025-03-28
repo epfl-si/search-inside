@@ -9,6 +9,7 @@ all:
     quay_registry: quay-its.epfl.ch/svc0012
     search_inside_git_uri: https://github.com/epfl-si/search-inside
     search_inside_git_branch: main
+    avi_route_access_level: public
     api_hostname: search-inside-api.epfl.ch
     api_image_name: search-inside-api
     api_image_tag: prod
