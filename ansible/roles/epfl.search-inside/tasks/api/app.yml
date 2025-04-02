@@ -145,8 +145,7 @@
         name: "{{ api_hostname }}"
         namespace: "{{ openshift_namespace }}"
         annotations:
-          haproxy.router.openshift.io/balance: roundrobin
-          haproxy.router.openshift.io/disable_cookies: 'true'
+          router.openshift.io/cookie-same-site: Strict
       spec:
         host: "{{ api_hostname }}"
         to:
