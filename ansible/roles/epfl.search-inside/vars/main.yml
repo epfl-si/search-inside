@@ -7,6 +7,10 @@ search_inside_kibana_password: "{{ search_inside_secrets.SEARCH_INSIDE_KIBANA_PA
 search_inside_api_ro_username: "{{ search_inside_secrets.SEARCH_INSIDE_API_RO_USERNAME }}"
 search_inside_api_ro_password: "{{ search_inside_secrets.SEARCH_INSIDE_API_RO_PASSWORD }}"
 
+# WordPress API credentials
+wp_api_username: "{{ search_inside_secrets.WP_API_USERNAME }}"
+wp_api_password: "{{ search_inside_secrets.WP_API_PASSWORD }}"
+
 # Pull Robot API
 _pull_robot_api_builder_secrets: "{{ search_inside_secrets.quay.pull_robot_search_inside_api_builder }}"
 _pull_robot_api_builder_credential: "{{ _pull_robot_api_builder_secrets.name }}:{{ _pull_robot_api_builder_secrets.token }}"

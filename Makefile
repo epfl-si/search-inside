@@ -1,5 +1,3 @@
-# (c) ECOLE POLYTECHNIQUE FEDERALE DE LAUSANNE, Switzerland, 2022.
-
 SHELL := /bin/bash
 
 TRIVY_IMAGE = aquasec/trivy
@@ -45,23 +43,17 @@ print-env: check-env
 	@echo "SEARCH_INSIDE_API_RO_USERNAME=${SEARCH_INSIDE_API_RO_USERNAME}"
 	@echo "SEARCH_INSIDE_API_RO_PASSWORD=${SEARCH_INSIDE_API_RO_PASSWORD}"
 	@echo "SEARCH_INSIDE_KIBANA_PASSWORD=${SEARCH_INSIDE_KIBANA_PASSWORD}"
+	@echo "WP_API_USERNAME=${WP_API_USERNAME}"
+	@echo "WP_API_PASSWORD=${WP_API_PASSWORD}"
 	@echo "DOCKER_BUILDKIT=${DOCKER_BUILDKIT}"
 
 .PHONY: build
 build:
-	@oc login https://pub-os-exopge.epfl.ch --username ${USER} -n wwp
-	@oc port-forward services/httpd-inside 8443:8443 &
-	@sleep 5
 	@docker compose -f docker-compose.elastic-local.yml -f docker-compose.api.yml -f docker-compose.kibana.yml build
-	@pkill oc -9
 
 .PHONY: build-force
 build-force:
-	@oc login https://pub-os-exopge.epfl.ch --username ${USER} -n wwp
-	@oc port-forward services/httpd-inside 8443:8443 &
-	@sleep 5
 	@docker compose -f docker-compose.elastic-local.yml -f docker-compose.api.yml -f docker-compose.kibana.yml build --force-rm --no-cache --pull
-	@pkill oc -9
 
 .PHONY: local-up
 local-up: check-env
@@ -69,5 +61,4 @@ local-up: check-env
 
 .PHONY: prod-up
 prod-up: check-env
-	@docker login os-docker-registry.epfl.ch
 	@docker compose -f docker-compose.elastic-prod.yml -f docker-compose.api.yml -f docker-compose.kibana.yml up
