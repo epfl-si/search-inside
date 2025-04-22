@@ -1,8 +1,8 @@
-- name: Elastic - Include Secrets
+- name: Elastic/App - Include main secrets
   include_tasks:
     file: 'secrets.yml'
 
-- name: Elastic - Pull Secret
+- name: Elastic/App - Pull Secret
   kubernetes.core.k8s:
     definition:
       apiVersion: v1
@@ -14,7 +14,7 @@
       data:
         .dockerconfigjson: "{{ pull_secret_elastic_config | to_json | b64encode }}"
 
-- name: Elastic - Service Account
+- name: Elastic/App - Service Account
   kubernetes.core.k8s:
     definition:
       apiVersion: v1
@@ -25,7 +25,7 @@
       imagePullSecrets:
         - name: search-inside-elastic-pull-secret
 
-- name: Elastic - Deployment
+- name: Elastic/App - Deployment
   kubernetes.core.k8s:
     definition:
       apiVersion: apps/v1
@@ -91,7 +91,7 @@
                   timeoutSeconds: 30
                   periodSeconds: 30
 
-- name: Elastic - Restart
+- name: Elastic/App - Restart
   when: >-
     "elastic.app.restart" in ansible_run_tags
   kubernetes.core.k8s:
@@ -108,7 +108,7 @@
               last-restart: "{{ lookup('pipe', 'date -u +%Y-%m-%dT%H:%M:%SZ') }}"
   tags: elastic.app.restart
 
-- name: Elastic - Service
+- name: Elastic/App - Service
   kubernetes.core.k8s:
     definition:
       apiVersion: v1

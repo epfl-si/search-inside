@@ -25,8 +25,6 @@
     - api.app.restart
 
 - name: Elastic - Image
-  when:
-    - inventory_environment == "test"
   include_tasks:
     file: 'elastic/image.yml'
     apply:
@@ -37,6 +35,29 @@
     - elastic
     - elastic.image
     - elastic.image.startbuild
+
+- name: Elastic - Tekton RBAC
+  include_tasks:
+    file: 'elastic/tekton-rbac.yml'
+    apply:
+      tags:
+        - elastic
+        - elastic.tekton-rbac
+  tags:
+    - elastic
+    - elastic.tekton-rbac
+
+- name: Elastic - Tekton
+  include_tasks:
+    file: 'elastic/tekton.yml'
+    apply:
+      tags:
+        - elastic
+        - elastic.tekton
+  tags:
+    - elastic
+    - elastic.tekton
+    - elastic.tekton.run-pipeline
 
 - name: Elastic - App
   include_tasks:

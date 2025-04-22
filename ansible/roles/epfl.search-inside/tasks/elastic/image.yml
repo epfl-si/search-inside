@@ -1,8 +1,8 @@
-- name: Elastic - Include Secrets
+- name: Elastic/Image - Include main secrets
   include_tasks:
     file: 'secrets.yml'
 
-- name: Elastic - Builder Pull Secret
+- name: Elastic/Image - Builder Pull Secret
   kubernetes.core.k8s:
     definition:
       apiVersion: v1
@@ -14,7 +14,7 @@
       data:
         .dockerconfigjson: "{{ pull_secret_elastic_builder_config | to_json | b64encode }}"
 
-- name: Elastic - Builder Service Account
+- name: Elastic/Image - Builder Service Account
   kubernetes.core.k8s:
     definition:
       apiVersion: v1
@@ -30,7 +30,9 @@
       imagePullSecrets:
         - name: search-inside-elastic-builder-pull-secret
 
-- name: Elastic - Build Config
+- name: Elastic/Image - Build Config (on test)
+  when:
+    - inventory_environment == "test"
   kubernetes.core.k8s:
     definition:
       apiVersion: build.openshift.io/v1
@@ -90,9 +92,9 @@
             cpu: "1"
             memory: "4Gi"
 
-- name: Elastic - Start build
+- name: Elastic/Image - Start build
   when: >-
-    "elastic.image.startbuild" in ansible_run_tags
+    "elastic.image.startbuild" in ansible_run_tags and inventory_environment == "test"
   shell:
     cmd: "oc -n {{ openshift_namespace }} start-build --wait search-inside-elastic"
   tags:

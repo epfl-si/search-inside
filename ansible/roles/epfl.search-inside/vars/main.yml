@@ -40,3 +40,8 @@ pull_secret_elastic_config:
   auths:
     "quay-its.epfl.ch":
       "auth": "{{ _pull_robot_elastic_credential | b64encode }}"
+
+# Tekton dependencies
+oc_cli_image_name: origin-cli
+oc_cli_image_tag: latest
+oc_cli_image: "{{ quay_registry }}/{{ oc_cli_image_name }}:{{ oc_cli_image_tag }}"

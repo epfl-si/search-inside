@@ -1,0 +1,61 @@
+- name: Elastic/Tekton RBAC - Role for test (with build)
+  when:
+    - inventory_environment == "test"
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: search-inside-elastic-builder-role
+        namespace: "{{ openshift_namespace }}"
+      rules:
+        - apiGroups: ["build.openshift.io"]
+          resources: ["buildconfigs/instantiate"]
+          verbs: ["create"]
+        - apiGroups: ["build.openshift.io"]
+          resources: ["builds/log"]
+          verbs: ["get"]
+        - apiGroups: ["build.openshift.io"]
+          resources: ["builds"]
+          verbs: ["get", "list", "watch"]
+        - apiGroups: ["apps"]
+          resources: ["deployments"]
+          verbs: ["get", "update", "patch"]
+        - apiGroups: ["tekton.dev"]
+          resources: ["pipelineruns"]
+          verbs: ["create", "get", "list", "patch"]
+
+- name: Elastic/Tekton RBAC - Role for prod (without build)
+  when:
+    - inventory_environment == "prod"
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: search-inside-elastic-builder-role
+        namespace: "{{ openshift_namespace }}"
+      rules:
+        - apiGroups: ["apps"]
+          resources: ["deployments"]
+          verbs: ["get", "update", "patch"]
+        - apiGroups: ["tekton.dev"]
+          resources: ["pipelineruns"]
+          verbs: ["create", "get", "list", "patch"]
+
+- name: Elastic/Tekton - RoleBinding
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: search-inside-elastic-builder-rolebinding
+        namespace: "{{ openshift_namespace }}"
+      subjects:
+        - kind: ServiceAccount
+          name: search-inside-elastic-builder
+          namespace: "{{ openshift_namespace }}"
+      roleRef:
+        kind: Role
+        name: search-inside-elastic-builder-role
+        apiGroup: rbac.authorization.k8s.io
