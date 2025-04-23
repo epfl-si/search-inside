@@ -1,0 +1,64 @@
+- name: Elastic/Prod Daily Rollout - Role
+  when:
+    - inventory_environment == "prod"
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: search-inside-elastic-role
+        namespace: "{{ openshift_namespace }}"
+      rules:
+        - apiGroups: ["apps"]
+          resources: ["deployments"]
+          verbs: ["get", "update", "patch"]
+
+- name: Elastic/Prod Daily Rollout - RoleBinding
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: search-inside-elastic-rolebinding
+        namespace: "{{ openshift_namespace }}"
+      subjects:
+        - kind: ServiceAccount
+          name: search-inside-elastic
+          namespace: "{{ openshift_namespace }}"
+      roleRef:
+        kind: Role
+        name: search-inside-elastic-role
+        apiGroup: rbac.authorization.k8s.io
+
+- name: Elastic/Prod Daily Rollout - CronJob
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: batch/v1
+      kind: CronJob
+      metadata:
+        name: search-inside-elastic-daily-refresh
+        namespace: "{{ openshift_namespace }}"
+      spec:
+        schedule: "45 3 * * *"
+        jobTemplate:
+          spec:
+            backoffLimit: 0
+            template:
+              spec:
+                serviceAccountName: search-inside-elastic
+                restartPolicy: Never
+                containers:
+                  - name: trigger-oc-rollout
+                    image: "{{ oc_cli_image }}"
+                    command:
+                      - /bin/sh
+                      - -c
+                      - |
+                        oc rollout restart deployments search-inside-elastic
+                    resources:
+                      requests:
+                        cpu: "100m"
+                        memory: "128Mi"
+                      limits:
+                        cpu: "250m"
+                        memory: "256Mi"

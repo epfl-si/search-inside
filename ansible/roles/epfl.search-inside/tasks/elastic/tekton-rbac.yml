@@ -1,4 +1,4 @@
-- name: Elastic/Tekton RBAC - Role for test (with build)
+- name: Elastic/Tekton RBAC - Role
   when:
     - inventory_environment == "test"
   kubernetes.core.k8s:
@@ -21,24 +21,6 @@
         - apiGroups: ["build.openshift.io"]
           resources: ["builds/log"]
           verbs: ["get"]
-        - apiGroups: ["apps"]
-          resources: ["deployments"]
-          verbs: ["get", "update", "patch"]
-        - apiGroups: ["tekton.dev"]
-          resources: ["pipelineruns"]
-          verbs: ["create", "get", "list", "patch"]
-
-- name: Elastic/Tekton RBAC - Role for prod (without build)
-  when:
-    - inventory_environment == "prod"
-  kubernetes.core.k8s:
-    definition:
-      apiVersion: rbac.authorization.k8s.io/v1
-      kind: Role
-      metadata:
-        name: search-inside-elastic-builder-role
-        namespace: "{{ openshift_namespace }}"
-      rules:
         - apiGroups: ["apps"]
           resources: ["deployments"]
           verbs: ["get", "update", "patch"]
