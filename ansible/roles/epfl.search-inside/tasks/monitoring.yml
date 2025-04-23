@@ -1,0 +1,121 @@
+- name: Monitoring/Secrets - Bot Token (Telegram)
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: v1
+      kind: Secret
+      type: Opaque
+      metadata:
+        name: search-inside-elastic-telegram
+        namespace: "{{ openshift_namespace }}"
+      data:
+        access_token: "{{ search_inside_secrets.telegram_alert.bot_token | b64encode }}"
+
+- name: Monitoring/AlertmanagerConfig
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: monitoring.coreos.com/v1beta1
+      kind: AlertmanagerConfig
+      metadata:
+        name: search-inside-alertmanager
+        namespace: "{{ openshift_namespace }}"
+      spec:
+        route:
+          receiver: "telegram"
+          groupBy: ["alertname"]
+          groupWait: 20s
+          groupInterval: 5m
+          repeatInterval: 3h
+          matchers:
+            - name: sendto
+              value: telegram
+              matchType: "="
+        receivers:
+          - name: "telegram"
+            telegramConfigs:
+              - botToken:
+                  name: telegram-bot-token
+                  key: access_token
+                chatID: "{{ search_inside_secrets.telegram_alert.chat_id | int }}"
+                message: |
+                  {% raw %}
+                  {{ range .Alerts }}
+                  {{ if eq .Status "firing" }}
+                  🚨 FIRING — {{ .Annotations.summary }}
+                  {{ .Annotations.description }}
+                  Started at (UTC): {{ .StartsAt.Format "2006-01-02 15:04:05" }}
+                  {{ else if eq .Status "resolved" }}
+                  🟢 RESOLVED — {{ .Annotations.summary }}
+                  {{ .Annotations.description }}
+                  Started at (UTC): {{ .StartsAt.Format "2006-01-02 15:04:05" }}
+                  Ended at (UTC): {{ .EndsAt.Format "2006-01-02 15:04:05" }}
+                  {{ end }}
+                  {{ end }}
+                  {% endraw %}
+                sendResolved: true
+
+- name: Monitoring/PrometheusRule
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        name: search-inside-alerts
+        namespace: "{{ openshift_namespace }}"
+      spec:
+        groups:
+          - name: pod-alerts
+            rules:
+              - alert: SearchInsideAPIPodCountMismatch
+                expr: >
+                  kube_deployment_status_replicas_available{deployment="search-inside-api", namespace="{{ openshift_namespace }}"}
+                  != kube_deployment_spec_replicas{deployment="search-inside-api", namespace="{{ openshift_namespace }}"}
+                for: 3m
+                labels:
+                  severity: critical
+                  sendto: telegram
+                annotations:
+                  summary: "Pod count mismatch for search-inside-api"
+                  description: >-
+                    "The deployment search-inside-api in the namespace "{{ openshift_namespace }}"
+                    has not the desired number of pods for over 3 minutes."
+              - alert: SearchInsideElasticPodCountMismatch
+                expr: >
+                  kube_deployment_status_replicas_available{deployment="search-inside-elastic", namespace="{{ openshift_namespace }}"}
+                  != kube_deployment_spec_replicas{deployment="search-inside-elastic", namespace="{{ openshift_namespace }}"}
+                for: 3m
+                labels:
+                  severity: critical
+                  sendto: telegram
+                annotations:
+                  summary: "Pod count mismatch for search-inside-elastic"
+                  description: >-
+                    "The deployment search-inside-elastic in the namespace "{{ openshift_namespace }}"
+                    has not the desired number of pods for over 3 minutes."
+          - name: build-alerts
+            rules:
+              - alert: SearchInsideElasticBuildFailure
+                expr: >
+                  increase(openshift_build_status_phase_total{
+                    build_phase=~"failed|error", namespace="{{ openshift_namespace }}", buildconfig="search-inside-elastic"
+                  }[2m]) > 0
+                for: 1m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: "Build failure for search-inside-elastic"
+                  description: "The build of search-inside-elastic has failed or encountered an error."
+          - name: rollout-alerts
+            rules:
+              - alert: SearchInsideElasticNoRollout
+                expr: >
+                  increase(kube_deployment_status_observed_generation{
+                    namespace="{{ openshift_namespace }}", deployment="search-inside-elastic"
+                  }[24h]) < 1
+                for: 1m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: "No rollout detected for search-inside-elastic"
+                  description: >-
+                    "The deployment search-inside-elastic in the namespace "{{ openshift_namespace }}"
+                    hasn't changed (rollout) in the last 24 hours."

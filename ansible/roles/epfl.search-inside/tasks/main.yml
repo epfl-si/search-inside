@@ -36,6 +36,18 @@
     - elastic.image
     - elastic.image.startbuild
 
+- name: Elastic - App
+  include_tasks:
+    file: 'elastic/app.yml'
+    apply:
+      tags:
+        - elastic
+        - elastic.app
+  tags:
+    - elastic
+    - elastic.app
+    - elastic.app.restart
+
 - name: Elastic - Tekton RBAC
   include_tasks:
     file: 'elastic/tekton-rbac.yml'
@@ -59,14 +71,11 @@
     - elastic.tekton
     - elastic.tekton.run-pipeline
 
-- name: Elastic - App
+- name: Monitoring
   include_tasks:
-    file: 'elastic/app.yml'
+    file: 'monitoring.yml'
     apply:
       tags:
-        - elastic
-        - elastic.app
+        - monitoring
   tags:
-    - elastic
-    - elastic.app
-    - elastic.app.restart
+    - monitoring
