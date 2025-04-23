@@ -6,7 +6,7 @@ Index notes
 -----------
 
 * The index data is stored inside the Elastic image.
-* In production, the Elastic image is rebuilt every night (by a Tekton Pipeline triggered by a CronJob).
+* The Elastic image is rebuilt every night (by a Tekton Pipeline) on the TEST environment.
 
 Contributing
 -------------

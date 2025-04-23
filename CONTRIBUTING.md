@@ -48,10 +48,8 @@ Deploy
 ------
 
 ```bash
-./ansible/elasticsible (--prod for deploy in production environment)
+./ansible/elasticsible       # (--prod for deploy in production environment)
 ```
-
-**Note:** The builds are made on cloud on OpenShift via BuildConfig on test environment.
 
 ## Search Inside API
 
@@ -71,7 +69,7 @@ Start a new build and restart the pods
 ./ansible/elasticsible -t elastic.image.restart
 ```
 
-You can also run the Tekton pipeline via elasticsible
+You can also run the Tekton pipeline via Ansible
 
 ```bash
 ./ansible/elasticsible -t elastic.tekton.run-pipeline
