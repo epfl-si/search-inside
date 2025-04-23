@@ -1,5 +1,3 @@
-# (c) ECOLE POLYTECHNIQUE FEDERALE DE LAUSANNE, Switzerland, 2022.
-
 SHELL := /bin/bash
 
 TRIVY_IMAGE = aquasec/trivy
@@ -36,7 +34,7 @@ endif
 scan:
 	@${TRIVY} image --clear-cache
 	@${TRIVY} image --severity HIGH,CRITICAL search-inside_elastic:latest
-	@${TRIVY} image --severity HIGH,CRITICAL search-inside_nodeapi:latest
+	@${TRIVY} image --severity HIGH,CRITICAL search-inside_api:latest
 
 .PHONY: print-env
 print-env: check-env
@@ -45,33 +43,22 @@ print-env: check-env
 	@echo "SEARCH_INSIDE_API_RO_USERNAME=${SEARCH_INSIDE_API_RO_USERNAME}"
 	@echo "SEARCH_INSIDE_API_RO_PASSWORD=${SEARCH_INSIDE_API_RO_PASSWORD}"
 	@echo "SEARCH_INSIDE_KIBANA_PASSWORD=${SEARCH_INSIDE_KIBANA_PASSWORD}"
+	@echo "WP_API_USERNAME=${WP_API_USERNAME}"
+	@echo "WP_API_PASSWORD=${WP_API_PASSWORD}"
 	@echo "DOCKER_BUILDKIT=${DOCKER_BUILDKIT}"
 
-set-dockerfile-dev:
-	@cp docker_nodeapi/Dockerfile docker_nodeapi/Dockerfile-dev
-	@sed -i 's#docker-registry.default.svc:5000/wwp-test/##g' docker_nodeapi/Dockerfile-dev
-
 .PHONY: build
-build: set-dockerfile-dev
-	@oc login https://pub-os-exopge.epfl.ch --username ${USER} -n wwp
-	@oc port-forward services/httpd-inside 8443:8443 &
-	@sleep 5
-	@docker compose -f docker-compose.elastic-local.yml -f docker-compose.nodeapi.yml -f docker-compose.kibana.yml build
-	@pkill oc -9
+build:
+	@docker compose -f docker-compose.elastic-local.yml -f docker-compose.api.yml -f docker-compose.kibana.yml build
 
 .PHONY: build-force
-build-force: set-dockerfile-dev
-	@oc login https://pub-os-exopge.epfl.ch --username ${USER} -n wwp
-	@oc port-forward services/httpd-inside 8443:8443 &
-	@sleep 5
-	@docker compose -f docker-compose.elastic-local.yml -f docker-compose.nodeapi.yml -f docker-compose.kibana.yml build --force-rm --no-cache --pull
-	@pkill oc -9
+build-force:
+	@docker compose -f docker-compose.elastic-local.yml -f docker-compose.api.yml -f docker-compose.kibana.yml build --force-rm --no-cache --pull
 
 .PHONY: local-up
 local-up: check-env
-	@docker compose -f docker-compose.elastic-local.yml -f docker-compose.nodeapi.yml -f docker-compose.kibana.yml up
+	@docker compose -f docker-compose.elastic-local.yml -f docker-compose.api.yml -f docker-compose.kibana.yml up
 
 .PHONY: prod-up
 prod-up: check-env
-	@docker login os-docker-registry.epfl.ch
-	@docker compose -f docker-compose.elastic-prod.yml -f docker-compose.nodeapi.yml -f docker-compose.kibana.yml up
+	@docker compose -f docker-compose.elastic-prod.yml -f docker-compose.api.yml -f docker-compose.kibana.yml up

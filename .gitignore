@@ -108,8 +108,5 @@ dist
 # TernJS port file
 .tern-port
 
-# Docker
-Dockerfile-dev
-
 # Elastic /data
 .elastic_data/

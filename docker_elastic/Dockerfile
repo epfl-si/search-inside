@@ -1,4 +1,4 @@
-FROM docker.elastic.co/elasticsearch/elasticsearch:8.10.2 as build-stage
+FROM quay-its.epfl.ch/svc0012/elasticsearch:8.10.2 as build-stage
 
 RUN /usr/share/elasticsearch/bin/elasticsearch-plugin install --batch ingest-attachment
 
@@ -8,9 +8,11 @@ ARG SEARCH_INSIDE_API_RO_PASSWORD
 ARG SEARCH_INSIDE_KIBANA_PASSWORD
 ARG ELASTIC_HOST=http://localhost:9200
 ARG WP_VERITAS_HOST=wp-veritas.epfl.ch
-ARG INSIDE_HOST=httpd-inside.wwp.svc:8443
+ARG INSIDE_HOST=inside.epfl.ch
 ARG INSIDE_HOST_HEADER_HOST=inside.epfl.ch
 ARG INSIDE_SITES_TO_INDEX
+ARG WP_API_USERNAME
+ARG WP_API_PASSWORD
 
 ENV SEARCH_INSIDE_ELASTIC_PASSWORD=$SEARCH_INSIDE_ELASTIC_PASSWORD
 ENV SEARCH_INSIDE_API_RO_USERNAME=$SEARCH_INSIDE_API_RO_USERNAME
@@ -20,7 +22,9 @@ ENV ELASTIC_HOST=$ELASTIC_HOST
 ENV WP_VERITAS_HOST=$WP_VERITAS_HOST
 ENV INSIDE_HOST=$INSIDE_HOST
 ENV INSIDE_HOST_HEADER_HOST=$INSIDE_HOST_HEADER_HOST
-ARG INSIDE_SITES_TO_INDEX=$INSIDE_SITES_TO_INDEX
+ENV INSIDE_SITES_TO_INDEX=$INSIDE_SITES_TO_INDEX
+ENV WP_API_USERNAME=$WP_API_USERNAME
+ENV WP_API_PASSWORD=$WP_API_PASSWORD
 
 USER root
 
@@ -56,7 +60,7 @@ USER elasticsearch
 RUN ./bootstrap-index-build.sh
 
 
-FROM docker.elastic.co/elasticsearch/elasticsearch:8.10.2
+FROM quay-its.epfl.ch/svc0012/elasticsearch:8.10.2
 
 RUN /usr/share/elasticsearch/bin/elasticsearch-plugin install --batch ingest-attachment
 

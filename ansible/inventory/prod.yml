@@ -1,6 +1,19 @@
-wwp-group:
+all:
   hosts:
-    wwp:
-      openshift_namespace: 'wwp'
+    openshift-prod:
+      openshift_namespace: svc0012p-search-engine
       ansible_connection: local
-      ansible_python_interpreter: '{{elasticsible_suitcase_dir}}/bin/python3'
+      ansible_python_interpreter: "{{ ansible_playbook_python }}"
+      inventory_environment: prod
+  vars:
+    quay_registry: quay-its.epfl.ch/svc0012
+    avi_route_access_level: public
+    api_hostname: search-inside-api.epfl.ch
+    api_image_name: search-inside-api
+    api_image_tag: latest
+    api_image: "{{ quay_registry }}/{{ api_image_name }}:{{ api_image_tag }}"
+    api_search_url: https://search.epfl.ch
+    elastic_image_name: search-inside-elastic
+    elastic_image_tag: latest
+    elastic_image: "{{ quay_registry }}/{{ elastic_image_name }}:{{ elastic_image_tag }}"
+

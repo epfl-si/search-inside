@@ -1,6 +1,6 @@
 services:
   elastic:
-    image: os-docker-registry.epfl.ch/wwp-test/search-inside-elastic:latest
+    image: quay-its.epfl.ch/svc0012/search-inside-elastic:latest
     container_name: search-inside-elastic
     environment:
       - bootstrap.memory_lock=true

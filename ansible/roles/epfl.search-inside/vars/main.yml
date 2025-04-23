@@ -1,21 +1,47 @@
-openshift_is_production: "{{ openshift_namespace == 'wwp' }}"
-searchinside_image_tag: "{{ 'prod' if openshift_is_production else 'latest' }}"
-searchinside_git_uri: https://github.com/epfl-si/search-inside
-searchinside_elastic_port: 9200
-searchinside_nodeapi_port: 4444
-searchinside_elastic_servicename: "search-inside-elastic"
-searchinside_nodeapi_servicename: "search-inside-nodeapi"
-searchinside_nodeapi_routename: "httpd-search-inside-nodeapi"
-searchinside_nodeapi_hostname: "{{ 'search-inside-api.epfl.ch' if openshift_is_production else 'search-inside-api-test.epfl.ch' }}"
-searchinside_nodeapi_search_url: "{{ 'https://search.epfl.ch' if openshift_is_production else 'https://test-search.epfl.ch' }}"
-nodejs_base_image_name: node
-nodejs_base_image_tag: 20-alpine
-nodejs_base_image: "{{ nodejs_base_image_name }}:{{ nodejs_base_image_tag }}"
-nodejs_base_image_mirrored_from: "docker.io/{{ nodejs_base_image }}"
-nodejs_base_image_mirrored_to: "docker-registry.default.svc:5000/wwp-test/{{ nodejs_base_image }}"
-searchinside_secrets: "{{ lookup('file', '/keybase/team/epfl_searchins/secrets.yml') | from_yaml }}"
-searchinside_session_secret: "{{ searchinside_secrets.SEARCH_INSIDE_SESSION_SECRET }}"
-searchinside_elastic_password: "{{ searchinside_secrets.SEARCH_INSIDE_ELASTIC_PASSWORD }}"
-searchinside_kibana_password: "{{ searchinside_secrets.SEARCH_INSIDE_KIBANA_PASSWORD }}"
-searchinside_api_ro_username: "{{ searchinside_secrets.SEARCH_INSIDE_API_RO_USERNAME }}"
-searchinside_api_ro_password: "{{ searchinside_secrets.SEARCH_INSIDE_API_RO_PASSWORD }}"
+
+search_inside_secrets: "{{ lookup('file', '/keybase/team/epfl_searchins/secrets.yml') | from_yaml }}"
+
+search_inside_session_secret: "{{ search_inside_secrets.SEARCH_INSIDE_SESSION_SECRET }}"
+search_inside_elastic_password: "{{ search_inside_secrets.SEARCH_INSIDE_ELASTIC_PASSWORD }}"
+search_inside_kibana_password: "{{ search_inside_secrets.SEARCH_INSIDE_KIBANA_PASSWORD }}"
+search_inside_api_ro_username: "{{ search_inside_secrets.SEARCH_INSIDE_API_RO_USERNAME }}"
+search_inside_api_ro_password: "{{ search_inside_secrets.SEARCH_INSIDE_API_RO_PASSWORD }}"
+
+# WordPress API credentials
+wp_api_username: "{{ search_inside_secrets.WP_API_USERNAME }}"
+wp_api_password: "{{ search_inside_secrets.WP_API_PASSWORD }}"
+
+# Pull Robot API
+_pull_robot_api_builder_secrets: "{{ search_inside_secrets.quay.pull_robot_search_inside_api_builder }}"
+_pull_robot_api_builder_credential: "{{ _pull_robot_api_builder_secrets.name }}:{{ _pull_robot_api_builder_secrets.token }}"
+pull_secret_api_builder_config:
+  auths:
+    "quay-its.epfl.ch":
+      "auth": "{{ _pull_robot_api_builder_credential | b64encode }}"
+
+_pull_robot_api_secrets: "{{ search_inside_secrets.quay.pull_robot_search_inside_api }}"
+_pull_robot_api_credential: "{{ _pull_robot_api_secrets.name }}:{{ _pull_robot_api_secrets.token }}"
+pull_secret_api_config:
+  auths:
+    "quay-its.epfl.ch":
+      "auth": "{{ _pull_robot_api_credential | b64encode }}"
+
+# Pull Robot Elastic
+_pull_robot_elastic_builder_secrets: "{{ search_inside_secrets.quay.pull_robot_search_inside_elastic_builder }}"
+_pull_robot_elastic_builder_credential: "{{ _pull_robot_elastic_builder_secrets.name }}:{{ _pull_robot_elastic_builder_secrets.token }}"
+pull_secret_elastic_builder_config:
+  auths:
+    "quay-its.epfl.ch":
+      "auth": "{{ _pull_robot_elastic_builder_credential | b64encode }}"
+
+_pull_robot_elastic_secrets: "{{ search_inside_secrets.quay.pull_robot_search_inside_elastic }}"
+_pull_robot_elastic_credential: "{{ _pull_robot_elastic_secrets.name }}:{{ _pull_robot_elastic_secrets.token }}"
+pull_secret_elastic_config:
+  auths:
+    "quay-its.epfl.ch":
+      "auth": "{{ _pull_robot_elastic_credential | b64encode }}"
+
+# Tekton dependencies
+oc_cli_image_name: origin-cli
+oc_cli_image_tag: latest
+oc_cli_image: "{{ quay_registry }}/{{ oc_cli_image_name }}:{{ oc_cli_image_tag }}"

@@ -14,6 +14,8 @@ const ELASTIC_HOST = process.env.ELASTIC_HOST;
 const WP_VERITAS_HOST = process.env.WP_VERITAS_HOST;
 const INSIDE_HOST = process.env.INSIDE_HOST;
 const INSIDE_HOST_HEADER_HOST = process.env.INSIDE_HOST_HEADER_HOST;
+const WP_API_USERNAME = process.env.WP_API_USERNAME;
+const WP_API_PASSWORD = process.env.WP_API_PASSWORD;
 
 const MAX_RETRIES_WP_API = 3;
 const MAX_RETRIES_ELASTIC = 3;
@@ -26,6 +28,10 @@ const authElastic = {
   username: 'elastic',
   password: SEARCH_INSIDE_ELASTIC_PASSWORD
 };
+const authWordPress = {
+  username: WP_API_USERNAME,
+  password: WP_API_PASSWORD
+}
 
 let retryWpApiCount = 0;
 let retryElasticCount = 0;
@@ -50,6 +56,8 @@ const checkEnvVars = () => {
   if (!WP_VERITAS_HOST) { console.log('ERROR: env WP_VERITAS_HOST is empty.'); process.exit(1); }
   if (!INSIDE_HOST) { console.log('ERROR: env INSIDE_HOST is empty.'); process.exit(1); }
   if (!INSIDE_HOST_HEADER_HOST) { console.log('ERROR: env INSIDE_HOST_HEADER_HOST is empty.'); process.exit(1); }
+  if (!WP_API_USERNAME) { console.log('ERROR: env WP_API_USERNAME is empty.'); process.exit(1); }
+  if (!WP_API_PASSWORD) { console.log('ERROR: env WP_API_PASSWORD is empty.'); process.exit(1); }
 };
 
 // Set inside sites to index
@@ -235,7 +243,7 @@ const getPages = async (site) => {
     while (true) {
       const response = await axios
         .get(`https://${INSIDE_HOST}/${site}/wp-json/wp/v2/pages?per_page=100&page=${currentPage}`, {
-          httpsAgent: agent, headers: { Host: INSIDE_HOST_HEADER_HOST }
+          httpsAgent: agent, headers: { Host: INSIDE_HOST_HEADER_HOST }, auth: authWordPress
         })
         .catch(async (error) => {
           console.log('Error get pages (site: ' + site + ', page: ' + currentPage + '): ' + error);
@@ -269,7 +277,7 @@ const getMedias = async (site) => {
     while (true) {
       const response = await axios
         .get(`https://${INSIDE_HOST}/${site}/wp-json/wp/v2/media?per_page=100&page=${currentPage}`, {
-          httpsAgent: agent, headers: { Host: INSIDE_HOST_HEADER_HOST }
+          httpsAgent: agent, headers: { Host: INSIDE_HOST_HEADER_HOST }, auth: authWordPress
         })
         .catch(async (error) => {
           console.log('Error get medias (site: ' + site + ', page: ' + currentPage + '): ' + error);
@@ -318,7 +326,7 @@ const indexMedia = async (fileName, sourceMedia) => {
     while (true) {
       const response = await axios
         .get(encodeURI(sourceMediaTmp), {
-          responseType: 'arraybuffer', httpsAgent: agent, headers: { Host: INSIDE_HOST_HEADER_HOST }
+          responseType: 'arraybuffer', httpsAgent: agent, headers: { Host: INSIDE_HOST_HEADER_HOST }, auth: authWordPress
         }).catch(async (error) => {
           console.log('Error get media (' + sourceMediaTmp + '): ' + error);
           if (retryWpApiCount++ === MAX_RETRIES_WP_API) {

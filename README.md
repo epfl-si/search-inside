@@ -6,7 +6,7 @@ Index notes
 -----------
 
 * The index data is stored inside the Elastic image.
-* In production, the Elastic image is rebuilt every night by [Jenkins](https://jenkins-wwp-test.epfl.ch/job/wwp-test/job/wwp-test-search-inside-jenkins/).
+* The Elastic image is rebuilt every night (by a Tekton Pipeline) on the TEST environment.
 
 Contributing
 -------------

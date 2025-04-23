@@ -1,9 +1,8 @@
 services:
-  nodeapi:
+  api:
     build:
-      context: ./docker_nodeapi
-      dockerfile: Dockerfile-dev
-    container_name: search-inside-nodeapi
+      context: ./docker_api
+    container_name: search-inside-api
     environment:
       - SEARCH_INSIDE_SEARCH_URL=http://localhost:3000
       - SEARCH_INSIDE_ELASTICSEARCH_URL=http://search-inside-elastic:9200
@@ -18,4 +17,4 @@ services:
     depends_on:
       - elastic
     volumes:
-      - ./docker_nodeapi/serverapi.js:/app/serverapi.js
+      - ./docker_api/serverapi.js:/app/serverapi.js

@@ -4,44 +4,75 @@ Contributing
 Prerequisites
 -------------
 
-* Access to the team Keybase /keybase/team/epfl_searchins.
-* Access to OpenShift EPFL projects 'wwp-test' and 'wwp'.
-* OpenShift CLI [oc](https://docs.openshift.com/container-platform/3.11/cli_reference/get_started_cli.html#installing-the-cli) and [Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) installed.
+* Be member of the [Keybase] `/keybase/team/epfl_searchins/` team.
+* Be member of the EPFL group `vra_p_svc0012`.
 
 
 Setup
 -----
 
-If you want to build the index locally (which is stored inside the Elastic image), you can define a restricted list of inside sites to be indexed within the value of `INSIDE_SITES_TO_INDEX` (comma-delimited) in [docker-compose.elastic-local.yml](docker-compose.elastic-local.yml).
+```bash
+git clone git@github.com:epfl-si/search-inside.git
+```
 
-Otherwise, you can run with production Elastic image from OpenShift who contains the production index data (see 'Build / Run' section).
+Help
+
+```bash
+make help
+```
 
 Build / Run
 -----------
 
 Build Elastic image (locally)
-`make build[-force]`
+
+Note: You can set only a restricted list of sites to be indexed within the value of `INSIDE_SITES_TO_INDEX` (comma-delimited) in [docker-compose.elastic-local.yml](docker-compose.elastic-local.yml).
+
+```bash
+make build
+```
 
 Run with **local** Elastic image
-`make local-up`
+
+```bash
+make local-up
+```
 
 Run with **production** Elastic image (built on Openshift)
-`make prod-up`
+
+```bash
+make prod-up
+```
 
 Deploy
 ------
 
-Connect to OpenShift  
-`oc login https://pub-os-exopge.epfl.ch --username $(whoami)`
+```bash
+./ansible/elasticsible       # (--prod for deploy in production environment)
+```
 
-Run elasticsible  
-`./ansible/elasticsible` (add `-- prod` for deploy in prod)
+## Search Inside API
 
-Rebuild Elastic image  
-`./ansible/elasticsible -t elastic.rebuild`
+Start a new build and restart the pods
 
-Rebuild NodeJS API image  
-`./ansible/elasticsible -t nodeapi.rebuild`
+```bash
+./ansible/elasticsible -t api.image.startbuild
+./ansible/elasticsible -t api.image.restart
+```
 
-Promote images  
-`./ansible/elasticsible -t images.promote --prod`
+## Search Inside Elastic
+
+Start a new build and restart the pods
+
+```bash
+./ansible/elasticsible -t elastic.image.startbuild
+./ansible/elasticsible -t elastic.image.restart
+```
+
+You can also run the Tekton pipeline via Ansible
+
+```bash
+./ansible/elasticsible -t elastic.tekton.run-pipeline
+```
+
+or from the OpenShift Console.

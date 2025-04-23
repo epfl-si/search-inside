@@ -1,323 +1,81 @@
-- name: Search Inside - Secrets
-  openshift:
-    apiVersion: v1
-    kind: Secret
-    metadata:
-      name: search-inside-secrets
-      namespace: "{{ openshift_namespace }}"
-    type: Opaque
-    data: >-
-      {{ _data | from_yaml }}
-  vars:
-    _data: |
-      SEARCH_INSIDE_SESSION_SECRET: "{{ searchinside_session_secret | b64encode }}"
-      SEARCH_INSIDE_ELASTIC_PASSWORD: "{{ searchinside_elastic_password | b64encode }}"
-      SEARCH_INSIDE_KIBANA_PASSWORD: "{{ searchinside_kibana_password | b64encode }}"
-      SEARCH_INSIDE_API_RO_USERNAME: "{{ searchinside_api_ro_username | b64encode }}"
-      SEARCH_INSIDE_API_RO_PASSWORD: "{{ searchinside_api_ro_password | b64encode }}"
-
-- name: Elastic - Image Stream
-  when: >-
-    openshift_namespace == "wwp-test"
-  openshift_imagestream:
-    state: latest
-    metadata:
-      namespace: "{{ openshift_namespace }}"
-      name: search-inside-elastic
-    git:
-      repository: "{{ searchinside_git_uri }}"
-      path: docker_elasticsearch
-      ref: main
-    strategy:
-      dockerStrategy:
-        env:
-          - name: SEARCH_INSIDE_KIBANA_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: search-inside-secrets
-                key: SEARCH_INSIDE_KIBANA_PASSWORD
-          - name: SEARCH_INSIDE_API_RO_USERNAME
-            valueFrom:
-              secretKeyRef:
-                name: search-inside-secrets
-                key: SEARCH_INSIDE_API_RO_USERNAME
-          - name: SEARCH_INSIDE_API_RO_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: search-inside-secrets
-                key: SEARCH_INSIDE_API_RO_PASSWORD
-    spec:
-      resources:
-        limits:
-          cpu: '1'
-          memory: 4Gi
-        requests:
-          cpu: '1'
-          memory: 4Gi
-  register: _openshift_image_search_inside_elastic
-
-- name: Elastic - Rebuild image
+- name: API - Image
   when:
-    - >
-      ( (_openshift_image_search_inside_elastic | default({})) is changed )
-      or
-      "elastic.rebuild" in ansible_run_tags
-    - >-
-      openshift_namespace == "wwp-test"
-  shell: "oc -n {{ openshift_namespace }} start-build --wait search-inside-elastic"
-  delegate_to: localhost
+    - inventory_environment == "test"
+  include_tasks:
+    file: 'api/image.yml'
+    apply:
+      tags:
+        - api
+        - api.image
   tags:
-    - elastic.rebuild
+    - api
+    - api.image
+    - api.image.startbuild
 
-- name: Elastic - Deployment Config
-  openshift:
-    apiVersion: apps.openshift.io/v1
-    kind: DeploymentConfig
-    metadata:
-      name: search-inside-elastic
-      namespace: "{{ openshift_namespace }}"
-    spec:
-      replicas: 2
-      selector:
-        deployment-config.name: search-inside-elastic
-      template:
-        metadata:
-          creationTimestamp: null
-          labels:
-            deployment-config.name: search-inside-elastic
-        spec:
-          containers:
-            - env:
-              - name: bootstrap.memory_lock
-                value: 'true'
-              - name: ES_JAVA_OPTS
-                value: '-Xms2g -Xmx2g'
-              - name: xpack.security.enabled
-                value: 'true'
-              - name: ELASTIC_PASSWORD
-                valueFrom:
-                  secretKeyRef:
-                    name: search-inside-secrets
-                    key: SEARCH_INSIDE_ELASTIC_PASSWORD
-              - name: discovery.type
-                value: 'single-node'
-              image: 'docker-registry.default.svc:5000/{{ openshift_namespace }}/search-inside-elastic:{{ searchinside_image_tag }}'
-              imagePullPolicy: Always
-              name: search-inside-elastic
-              resources:
-                requests:
-                  memory: '4Gi'
-                limits:
-                  memory: '4Gi'
-              readinessProbe:
-                exec:
-                  command:
-                    - sh
-                    - -c
-                    - |
-                      #!/usr/bin/env/bash
-                      if curl -u {{ searchinside_api_ro_username }}:{{ searchinside_api_ro_password }} http://localhost:9200/; then
-                        exit 0
-                      else
-                        exit 1
-                      fi
-                initialDelaySeconds: 30
-                timeoutSeconds: 30
-                periodSeconds: 30
-          dnsPolicy: ClusterFirst
-          restartPolicy: Always
-          schedulerName: default-scheduler
-          terminationGracePeriodSeconds: 30
-      triggers:
-        - type: ImageChange
-          imageChangeParams:
-            automatic: true
-            containerNames:
-              - search-inside-elastic
-            from:
-              kind: ImageStreamTag
-              name: 'search-inside-elastic:{{ searchinside_image_tag }}'
-              namespace: "{{ openshift_namespace }}"
-
-- name: Elastic - Service
-  openshift:
-    state: latest
-    apiVersion: v1
-    kind: Service
-    metadata:
-      name: "{{ searchinside_elastic_servicename }}"
-      namespace: "{{ openshift_namespace }}"
-    spec:
-      type: ClusterIP
-      ports:
-        - port: "{{ searchinside_elastic_port }}"
-          protocol: TCP
-          targetPort: "{{ searchinside_elastic_port }}"
-      selector:
-        deployment-config.name: search-inside-elastic
-
-- name: "Pull {{ nodejs_base_image_mirrored_from }} into {{ nodejs_base_image_mirrored_to }}"
-  when: >-
-    openshift_namespace == "wwp-test"
-  delegate_to: localhost
-  openshift_imagestream:
-    metadata:
-      name: "{{ nodejs_base_image_name }}"
-      namespace: "{{ openshift_namespace }}"
-    from: "{{ nodejs_base_image_mirrored_from }}"
-    tag: "{{ nodejs_base_image_tag }}"
-
-- name: Promote wwp-test search-inside-* images to wwp
-  when: >-
-    openshift_is_production and
-    ("images.promote" in ansible_run_tags)
-  local_action:
-    module: shell
-    cmd: |
-      oc tag wwp-test/search-inside-elastic:latest wwp/search-inside-elastic:prod
-      oc tag wwp-test/search-inside-nodeapi:latest wwp/search-inside-nodeapi:prod
-  tags: images.promote
-
-- name: NodeJS api - Image Stream
-  when: >-
-    openshift_namespace == "wwp-test"
-  openshift_imagestream:
-    state: latest
-    metadata:
-      namespace: "{{ openshift_namespace }}"
-      name: search-inside-nodeapi
-    git:
-      repository: "{{ searchinside_git_uri }}"
-      path: docker_nodeapi
-      ref: main
-  register: _openshift_image_search_inside_nodeapi
-
-- name: NodeJS api - Rebuild image
-  when:
-    - >
-      ( (_openshift_image_search_inside_nodeapi | default({})) is changed )
-      or
-      "nodeapi.rebuild" in ansible_run_tags
-    - >-
-      openshift_namespace == "wwp-test"
-  shell: "oc -n {{ openshift_namespace }} start-build --wait search-inside-nodeapi"
-  delegate_to: localhost
+- name: API - App
+  include_tasks:
+    file: 'api/app.yml'
+    apply:
+      tags:
+        - api
+        - api.app
   tags:
-    - nodeapi.rebuild
+    - api
+    - api.app
+    - api.app.restart
 
-- name: NodeJS api - Deployment Config
-  openshift:
-    apiVersion: apps.openshift.io/v1
-    kind: DeploymentConfig
-    metadata:
-      name: search-inside-nodeapi
-      namespace: "{{ openshift_namespace }}"
-    spec:
-      replicas: 1
-      selector:
-        deployment-config.name: search-inside-nodeapi
-      template:
-        metadata:
-          creationTimestamp: null
-          labels:
-            deployment-config.name: search-inside-nodeapi
-        spec:
-          containers:
-            - env:
-              - name: SEARCH_INSIDE_ELASTICSEARCH_URL
-                value: 'http://search-inside-elastic.{{ openshift_namespace }}.svc:9200'
-              - name: SEARCH_INSIDE_SEARCH_URL
-                value: "{{ searchinside_nodeapi_search_url }}"
-              - name: SEARCH_INSIDE_ALLOW_EXTERNAL
-                value: 'False'
-              - name: NODE_ENV
-                value: 'production'
-              - name: SEARCH_INSIDE_SESSION_SECRET
-                valueFrom:
-                  secretKeyRef:
-                    name: search-inside-secrets
-                    key: SEARCH_INSIDE_SESSION_SECRET
-              - name: SEARCH_INSIDE_API_RO_USERNAME
-                valueFrom:
-                  secretKeyRef:
-                    name: search-inside-secrets
-                    key: SEARCH_INSIDE_API_RO_USERNAME
-              - name: SEARCH_INSIDE_API_RO_PASSWORD
-                valueFrom:
-                  secretKeyRef:
-                    name: search-inside-secrets
-                    key: SEARCH_INSIDE_API_RO_PASSWORD
-              image: 'docker-registry.default.svc:5000/{{ openshift_namespace }}/search-inside-nodeapi:{{ searchinside_image_tag }}'
-              imagePullPolicy: Always
-              name: search-inside-nodeapi
-          dnsPolicy: ClusterFirst
-          restartPolicy: Always
-          schedulerName: default-scheduler
-          terminationGracePeriodSeconds: 30
-      triggers:
-        - type: ImageChange
-          imageChangeParams:
-            automatic: true
-            containerNames:
-              - search-inside-nodeapi
-            from:
-              kind: ImageStreamTag
-              name: 'search-inside-nodeapi:{{ searchinside_image_tag }}'
-              namespace: "{{ openshift_namespace }}"
+- name: Elastic - Image
+  include_tasks:
+    file: 'elastic/image.yml'
+    apply:
+      tags:
+        - elastic
+        - elastic.image
+  tags:
+    - elastic
+    - elastic.image
+    - elastic.image.startbuild
 
-- name: NodeJS api - Service
-  openshift:
-    state: latest
-    apiVersion: v1
-    kind: Service
-    metadata:
-      name: "{{ searchinside_nodeapi_servicename }}"
-      namespace: "{{ openshift_namespace }}"
-    spec:
-      type: ClusterIP
-      ports:
-        - port: "{{ searchinside_nodeapi_port }}"
-          protocol: TCP
-          targetPort: "{{ searchinside_nodeapi_port }}"
-      selector:
-        deployment-config.name: search-inside-nodeapi
+- name: Elastic - App
+  include_tasks:
+    file: 'elastic/app.yml'
+    apply:
+      tags:
+        - elastic
+        - elastic.app
+  tags:
+    - elastic
+    - elastic.app
+    - elastic.app.restart
 
-- name: NodeJS api - Route
-  openshift:
-    state: latest
-    apiVersion: route.openshift.io/v1
-    kind: Route
-    metadata:
-      name: "{{ searchinside_nodeapi_routename }}"
-      namespace: "{{ openshift_namespace }}"
-      annotations:
-        haproxy.router.openshift.io/hsts_header: max-age=15552001
-        router.openshift.io/cookie-same-site: Strict
-    spec:
-      host: "{{ searchinside_nodeapi_hostname }}"
-      wildcardPolicy: None
-      port:
-        targetPort: 4444
-      tls:
-        termination: edge
-      to:
-        kind: Service
-        name: "{{ searchinside_nodeapi_servicename }}"
-        weight: 100
+- name: Elastic - Tekton RBAC
+  include_tasks:
+    file: 'elastic/tekton-rbac.yml'
+    apply:
+      tags:
+        - elastic
+        - elastic.tekton-rbac
+  tags:
+    - elastic
+    - elastic.tekton-rbac
 
-- name: Jenkins pipeline - BuildConfig
-  when: >-
-    openshift_namespace == "wwp-test"
-  openshift:
-    state: latest
-    apiVersion: v1
-    kind: BuildConfig
-    metadata:
-      labels:
-        app: jenkins
-      name: "search-inside-jenkins"
-      namespace: "{{ openshift_namespace }}"
-    spec:
-      strategy:
-        jenkinsPipelineStrategy:
-          jenkinsfile: '{{ lookup("template", "Jenkinsfile") }}'
+- name: Elastic - Tekton
+  include_tasks:
+    file: 'elastic/tekton.yml'
+    apply:
+      tags:
+        - elastic
+        - elastic.tekton
+  tags:
+    - elastic
+    - elastic.tekton
+    - elastic.tekton.run-pipeline
+
+- name: Monitoring
+  include_tasks:
+    file: 'monitoring.yml'
+    apply:
+      tags:
+        - monitoring
+  tags:
+    - monitoring

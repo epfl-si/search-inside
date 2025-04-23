@@ -1,6 +1,20 @@
-wwp-test-group:
+all:
   hosts:
-    wwp-test:
-      openshift_namespace: 'wwp-test'
+    openshift-test:
+      openshift_namespace: svc0012t-search-engine
       ansible_connection: local
-      ansible_python_interpreter: '{{elasticsible_suitcase_dir}}/bin/python3'
+      ansible_python_interpreter: "{{ ansible_playbook_python }}"
+      inventory_environment: test
+  vars:
+    quay_registry: quay-its.epfl.ch/svc0012
+    search_inside_git_uri: https://github.com/epfl-si/search-inside
+    search_inside_git_branch: main
+    avi_route_access_level: private
+    api_hostname: search-inside-api-test.epfl.ch
+    api_image_name: search-inside-api
+    api_image_tag: latest
+    api_image: "{{ quay_registry }}/{{ api_image_name }}:{{ api_image_tag }}"
+    api_search_url: https://staging-search.epfl.ch
+    elastic_image_name: search-inside-elastic
+    elastic_image_tag: latest
+    elastic_image: "{{ quay_registry }}/{{ elastic_image_name }}:{{ elastic_image_tag }}"

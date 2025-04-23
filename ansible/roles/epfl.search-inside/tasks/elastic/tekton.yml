@@ -1,0 +1,128 @@
+- name: Elastic/Tekton - Task/Build Elastic (on test)
+  when:
+    - inventory_environment == "test"
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: tekton.dev/v1beta1
+      kind: Task
+      metadata:
+        name: build-elastic
+        namespace: "{{ openshift_namespace }}"
+      spec:
+        steps:
+          - name: start-build
+            image: "{{ oc_cli_image }}"
+            script: |
+              #!/bin/sh
+              oc start-build search-inside-elastic --wait
+  changed_when: false
+
+- name: Elastic/Tekton - Task/Restart Elastic
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: tekton.dev/v1beta1
+      kind: Task
+      metadata:
+        name: restart-elastic
+        namespace: "{{ openshift_namespace }}"
+      spec:
+        steps:
+          - name: deployment-rollout
+            image: "{{ oc_cli_image }}"
+            script: |
+              #!/bin/sh
+              oc rollout restart deployments search-inside-elastic
+  changed_when: false
+
+- name: Elastic/Tekton - Pipeline on test (build + restart)
+  when:
+    - inventory_environment == "test"
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: tekton.dev/v1beta1
+      kind: Pipeline
+      metadata:
+        name: build-and-restart-elastic
+        namespace: "{{ openshift_namespace }}"
+      spec:
+        tasks:
+          - name: build-elastic
+            timeout: "2h"
+            taskRef:
+              name: build-elastic
+          - name: restart-elastic
+            runAfter:
+              - build-elastic
+            taskRef:
+              name: restart-elastic
+  changed_when: false
+
+- name: Elastic/Tekton - Pipeline on prod (restart)
+  when:
+    - inventory_environment == "prod"
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: tekton.dev/v1beta1
+      kind: Pipeline
+      metadata:
+        name: restart-elastic
+        namespace: "{{ openshift_namespace }}"
+      spec:
+        tasks:
+          - name: restart-elastic
+            taskRef:
+              name: restart-elastic
+
+- name: Elastic/Tekton - CronJob
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: batch/v1
+      kind: CronJob
+      metadata:
+        name: run-pipeline-elastic
+        namespace: "{{ openshift_namespace }}"
+      spec:
+        schedule: "{{ '25 1 * * *' if inventory_environment == 'test' else '45 3 * * *' }}"
+        jobTemplate:
+          spec:
+            backoffLimit: 0
+            template:
+              spec:
+                serviceAccountName: search-inside-elastic-builder
+                restartPolicy: Never
+                containers:
+                  - name: trigger-oc-pipelinerun
+                    image: "{{ oc_cli_image }}"
+                    command:
+                      - /bin/sh
+                      - -c
+                      - |
+                        oc apply -f - <<EOF
+                        apiVersion: tekton.dev/v1beta1
+                        kind: PipelineRun
+                        metadata:
+                          name: run-pipeline-elastic-$(date -u +%Y%m%d-%H%Mz)
+                          namespace: "{{ openshift_namespace }}"
+                        spec:
+                          timeout: "2h"
+                          serviceAccountName: search-inside-elastic-builder
+                          pipelineRef:
+                            name: "{{ 'build-and-' if inventory_environment == 'test' else '' }}restart-elastic"
+                        EOF
+
+- name: Elastic/Tekton - Run pipeline (test or prod)
+  when: >-
+    "elastic.tekton.run-pipeline" in ansible_run_tags
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        name: "run-pipeline-elastic-{{ lookup('pipe', 'date -u +%Y%m%d-%H%Mz') }}"
+        namespace: "{{ openshift_namespace }}"
+      spec:
+        timeout: "2h"
+        serviceAccountName: search-inside-elastic-builder
+        pipelineRef:
+          name: "{{ 'build-and-' if inventory_environment == 'test' else '' }}restart-elastic"
+  tags: elastic.tekton.run-pipeline
