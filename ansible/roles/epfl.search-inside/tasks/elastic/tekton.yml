@@ -15,6 +15,7 @@
             script: |
               #!/bin/sh
               oc start-build search-inside-elastic --wait
+  changed_when: false
 
 - name: Elastic/Tekton - Task/Restart Elastic
   kubernetes.core.k8s:
@@ -31,6 +32,7 @@
             script: |
               #!/bin/sh
               oc rollout restart deployments search-inside-elastic
+  changed_when: false
 
 - name: Elastic/Tekton - Pipeline on test (build + restart)
   when:
@@ -45,6 +47,7 @@
       spec:
         tasks:
           - name: build-elastic
+            timeout: "2h"
             taskRef:
               name: build-elastic
           - name: restart-elastic
@@ -52,6 +55,7 @@
               - build-elastic
             taskRef:
               name: restart-elastic
+  changed_when: false
 
 - name: Elastic/Tekton - Pipeline on prod (restart)
   when:
@@ -78,7 +82,7 @@
         name: run-pipeline-elastic
         namespace: "{{ openshift_namespace }}"
       spec:
-        schedule: "{{ '36 * * * *' if inventory_environment == 'test' else '41 3 * * *' }}"
+        schedule: "{{ '25 1 * * *' if inventory_environment == 'test' else '45 3 * * *' }}"
         jobTemplate:
           spec:
             backoffLimit: 0
@@ -100,7 +104,7 @@
                           name: run-pipeline-elastic-$(date -u +%Y%m%d-%H%Mz)
                           namespace: "{{ openshift_namespace }}"
                         spec:
-                          timeout: "{{ '2h' if inventory_environment == 'test' else '15m' }}"
+                          timeout: "2h"
                           serviceAccountName: search-inside-elastic-builder
                           pipelineRef:
                             name: "{{ 'build-and-' if inventory_environment == 'test' else '' }}restart-elastic"
@@ -117,7 +121,7 @@
         name: "run-pipeline-elastic-{{ lookup('pipe', 'date -u +%Y%m%d-%H%Mz') }}"
         namespace: "{{ openshift_namespace }}"
       spec:
-        timeout: "{{ '2h' if inventory_environment == 'test' else '15m' }}"
+        timeout: "2h"
         serviceAccountName: search-inside-elastic-builder
         pipelineRef:
           name: "{{ 'build-and-' if inventory_environment == 'test' else '' }}restart-elastic"
