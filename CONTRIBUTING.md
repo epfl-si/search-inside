@@ -48,7 +48,7 @@ Deploy
 ------
 
 ```bash
-./ansible/elasticsible       # (--prod for deploy in production environment)
+./ansible/elasticsible     # (--prod for deploy in production environment)
 ```
 
 ## Search Inside API
@@ -57,7 +57,7 @@ Start a new build and restart the pods
 
 ```bash
 ./ansible/elasticsible -t api.image.startbuild
-./ansible/elasticsible -t api.image.restart
+./ansible/elasticsible -t api.image.restart     # (--prod for production environment)
 ```
 
 ## Search Inside Elastic
@@ -66,7 +66,7 @@ Start a new build and restart the pods
 
 ```bash
 ./ansible/elasticsible -t elastic.image.startbuild
-./ansible/elasticsible -t elastic.image.restart
+./ansible/elasticsible -t elastic.image.restart     # (--prod for production environment)
 ```
 
 You can also run the Tekton pipeline via Ansible

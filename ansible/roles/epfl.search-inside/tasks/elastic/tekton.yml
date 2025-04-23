@@ -1,6 +1,4 @@
-- name: Elastic/Tekton - Task/Build Elastic (on test)
-  when:
-    - inventory_environment == "test"
+- name: Elastic/Tekton - Task/Build Elastic
   kubernetes.core.k8s:
     definition:
       apiVersion: tekton.dev/v1beta1
@@ -34,9 +32,7 @@
               oc rollout restart deployments search-inside-elastic
   changed_when: false
 
-- name: Elastic/Tekton - Pipeline on test (build + restart)
-  when:
-    - inventory_environment == "test"
+- name: Elastic/Tekton - Pipeline
   kubernetes.core.k8s:
     definition:
       apiVersion: tekton.dev/v1beta1
@@ -57,22 +53,6 @@
               name: restart-elastic
   changed_when: false
 
-- name: Elastic/Tekton - Pipeline on prod (restart)
-  when:
-    - inventory_environment == "prod"
-  kubernetes.core.k8s:
-    definition:
-      apiVersion: tekton.dev/v1beta1
-      kind: Pipeline
-      metadata:
-        name: restart-elastic
-        namespace: "{{ openshift_namespace }}"
-      spec:
-        tasks:
-          - name: restart-elastic
-            taskRef:
-              name: restart-elastic
-
 - name: Elastic/Tekton - CronJob
   kubernetes.core.k8s:
     definition:
@@ -82,7 +62,7 @@
         name: run-pipeline-elastic
         namespace: "{{ openshift_namespace }}"
       spec:
-        schedule: "{{ '25 1 * * *' if inventory_environment == 'test' else '45 3 * * *' }}"
+        schedule: "25 1 * * *"
         jobTemplate:
           spec:
             backoffLimit: 0
@@ -107,10 +87,10 @@
                           timeout: "2h"
                           serviceAccountName: search-inside-elastic-builder
                           pipelineRef:
-                            name: "{{ 'build-and-' if inventory_environment == 'test' else '' }}restart-elastic"
+                            name: "build-and-restart-elastic"
                         EOF
 
-- name: Elastic/Tekton - Run pipeline (test or prod)
+- name: Elastic/Tekton - Run pipeline
   when: >-
     "elastic.tekton.run-pipeline" in ansible_run_tags
   kubernetes.core.k8s:
@@ -124,5 +104,5 @@
         timeout: "2h"
         serviceAccountName: search-inside-elastic-builder
         pipelineRef:
-          name: "{{ 'build-and-' if inventory_environment == 'test' else '' }}restart-elastic"
+          name: "build-and-restart-elastic"
   tags: elastic.tekton.run-pipeline
