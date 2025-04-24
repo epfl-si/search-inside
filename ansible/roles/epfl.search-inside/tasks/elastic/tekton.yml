@@ -64,6 +64,7 @@
       spec:
         timeZone: "Europe/Zurich"
         schedule: "25 1 * * *"
+        concurrencyPolicy: Forbid
         jobTemplate:
           spec:
             backoffLimit: 0
