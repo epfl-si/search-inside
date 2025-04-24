@@ -93,6 +93,20 @@
                     has not the desired number of pods for over 3 minutes."
           - name: build-alerts
             rules:
+              - alert: SearchInsideElasticBuildOlderThan30H
+                expr: >
+                  (time() -
+                    max(
+                      kube_pod_start_time{namespace="{{ openshift_namespace }}", pod=~"search-inside-elastic.*-build"}
+                    )
+                  ) > 108000
+                for: 10m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: "Build for search-inside-elastic older than 30 hours"
+                  description: >-
+                    "The most recent build for search-inside-elastic is older than 30 hours."
               - alert: SearchInsideElasticBuildFailure
                 expr: >
                   increase(openshift_build_status_phase_total{
@@ -119,3 +133,18 @@
                   description: >-
                     "The deployment search-inside-elastic in the namespace "{{ openshift_namespace }}"
                     hasn't changed (rollout) in the last 24 hours."
+              - alert: SearchInsideElasticPodOlderThan30H
+                expr: >
+                  (time() -
+                    kube_pod_start_time{
+                      namespace="svc0012p-search-engine", pod=~"search-inside-elastic.*", pod!~".*(daily-refresh|build).*"
+                    }
+                  ) > 108000
+                for: 10m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: "Pod(s) for search-inside-elastic older than 30 hours"
+                  description: >-
+                    "The pod(s) for search-inside-elastic in the namespace "{{ openshift_namespace }}"
+                    are older than 30 hours."
