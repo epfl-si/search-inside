@@ -99,7 +99,7 @@
                     max(
                       kube_pod_start_time{namespace="{{ openshift_namespace }}", pod=~"search-inside-elastic.*-build"}
                     )
-                  ) > 10800
+                  ) > 108000
                 for: 10m
                 labels:
                   severity: warning
