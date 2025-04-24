@@ -39,6 +39,7 @@
         name: search-inside-elastic-daily-refresh
         namespace: "{{ openshift_namespace }}"
       spec:
+        timeZone: "Europe/Zurich"
         schedule: "45 3 * * *"
         jobTemplate:
           spec:

@@ -62,6 +62,7 @@
         name: run-pipeline-elastic
         namespace: "{{ openshift_namespace }}"
       spec:
+        timeZone: "Europe/Zurich"
         schedule: "25 1 * * *"
         jobTemplate:
           spec:
