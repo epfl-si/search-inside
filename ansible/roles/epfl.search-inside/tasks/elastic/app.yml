@@ -33,6 +33,16 @@
       metadata:
         name: search-inside-elastic
         namespace: "{{ openshift_namespace }}"
+        labels:
+          app.kubernetes.io/component: 'backend'
+          app.kubernetes.io/managed-by: 'ansible'
+          app.kubernetes.io/name: 'search-inside-elastic'
+          app.kubernetes.io/part-of: 'search'
+          app.kubernetes.io/version: 'main'
+          app.openshift.io/runtime: 'elastic'
+        annotations:
+          app.openshift.io/vcs-uri: 'https://github.com/epfl-si/search-inside/'
+          app.openshift.io/vcs-ref: 'main'
       spec:
         replicas: 1
         strategy:
