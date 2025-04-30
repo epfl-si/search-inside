@@ -61,6 +61,17 @@
       metadata:
         name: run-pipeline-elastic
         namespace: "{{ openshift_namespace }}"
+        labels:
+          app.kubernetes.io/component: 'cronjob'
+          app.kubernetes.io/managed-by: 'ansible'
+          app.kubernetes.io/name: 'search-inside-elastic'
+          app.kubernetes.io/part-of: 'search'
+          app.kubernetes.io/version: 'main'
+          app.openshift.io/runtime: "{{ oc_cli_image_name }}"
+        annotations:
+          app.openshift.io/vcs-uri: 'https://github.com/epfl-si/search-inside/'
+          app.openshift.io/vcs-ref: 'main'
+          app.openshift.io/connects-to: 'search-inside-elastic'
       spec:
         timeZone: "Europe/Zurich"
         schedule: "25 1 * * *"
