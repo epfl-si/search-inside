@@ -109,9 +109,9 @@
                     "The most recent build for search-inside-elastic is older than 30 hours."
               - alert: SearchInsideElasticBuildFailure
                 expr: >
-                  increase(openshift_build_status_phase_total{
+                  changes(openshift_build_status_phase_total{
                     build_phase=~"failed|error", namespace="{{ openshift_namespace }}", buildconfig="search-inside-elastic"
-                  }[2m]) > 0
+                  }[10m]) > 0
                 for: 1m
                 labels:
                   severity: warning
