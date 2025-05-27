@@ -103,6 +103,7 @@
                 for: 10m
                 labels:
                   severity: warning
+                  sendto: telegram
                 annotations:
                   summary: "Build for search-inside-elastic older than 30 hours"
                   description: >-
@@ -115,6 +116,7 @@
                 for: 1m
                 labels:
                   severity: warning
+                  sendto: telegram
                 annotations:
                   summary: "Build failure for search-inside-elastic"
                   description: "The build of search-inside-elastic has failed or encountered an error."
@@ -128,6 +130,7 @@
                 for: 1m
                 labels:
                   severity: warning
+                  sendto: telegram
                 annotations:
                   summary: "No rollout detected for search-inside-elastic"
                   description: >-
@@ -143,6 +146,7 @@
                 for: 10m
                 labels:
                   severity: warning
+                  sendto: telegram
                 annotations:
                   summary: "Pod(s) for search-inside-elastic older than 30 hours"
                   description: >-
