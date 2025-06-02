@@ -74,16 +74,18 @@ const setInsideSites = async () => {
     // Get the inside sites to index from WP Veritas
     const sitesFromVeritas = await axios
       .get(
-        `https://${WP_VERITAS_HOST}/api/v1/categories/Inside/sites`
+        `https://${WP_VERITAS_HOST}/api/v1/sites`
       ).catch((error) => {
         console.log('Error get inside sites: ' + error);
         process.exit(1);
       });
-
     for (const siteData of sitesFromVeritas.data) {
+      // Process only sites under https://inside.epfl.ch, excuding the inside homepage
+      if (!siteData.url.startsWith('https://inside.epfl.ch') || siteData.url === "https://inside.epfl.ch/") {
+        continue;
+      }
       // Get the site name (e.g. 'https://inside.epfl.ch/earl-hacker-tips/' → 'earl-hacker-tips')
       const site = siteData.url.replace(/\/$/, '').split('/').pop();
-
       // For the moment, we only index inside sites that do not have group restrictions (except intranet-epfl)
       const groupsResponse = await axios
         .get(
@@ -112,6 +114,10 @@ const setInsideSites = async () => {
           break;
         }
       }
+    }
+    if (insideSites.length === 0) {
+      console.error('Error: No sites to index.');
+      process.exit(1);
     }
     console.log('Total: ' + insideSites.length + ' inside sites to index');
     console.log(insideSites);
