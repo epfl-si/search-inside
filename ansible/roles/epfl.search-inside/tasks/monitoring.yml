@@ -122,25 +122,11 @@
                   description: "The build of search-inside-elastic has failed or encountered an error."
           - name: rollout-alerts
             rules:
-              - alert: SearchInsideElasticNoRollout
-                expr: >
-                  increase(kube_deployment_status_observed_generation{
-                    namespace="{{ openshift_namespace }}", deployment="search-inside-elastic"
-                  }[24h]) < 1
-                for: 1m
-                labels:
-                  severity: warning
-                  sendto: telegram
-                annotations:
-                  summary: "No rollout detected for search-inside-elastic"
-                  description: >-
-                    "The deployment search-inside-elastic in the namespace "{{ openshift_namespace }}"
-                    hasn't changed (rollout) in the last 24 hours."
               - alert: SearchInsideElasticPodOlderThan30H
                 expr: >
                   (time() -
                     kube_pod_start_time{
-                      namespace="svc0012p-search-engine", pod=~"search-inside-elastic.*", pod!~".*(daily-refresh|build).*"
+                      namespace="{{ openshift_namespace }}", pod=~"search-inside-elastic.*", pod!~".*(daily-refresh|build).*"
                     }
                   ) > 108000
                 for: 10m
