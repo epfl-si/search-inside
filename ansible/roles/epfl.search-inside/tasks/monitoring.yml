@@ -140,7 +140,7 @@
                 expr: >
                   (time() -
                     kube_pod_start_time{
-                      namespace="svc0012p-search-engine", pod=~"search-inside-elastic.*", pod!~".*(daily-refresh|build).*"
+                      namespace="{{ openshift_namespace }}", pod=~"search-inside-elastic.*", pod!~".*(daily-refresh|build).*"
                     }
                   ) > 108000
                 for: 10m
