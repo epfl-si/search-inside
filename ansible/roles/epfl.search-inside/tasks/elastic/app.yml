@@ -66,10 +66,10 @@
                   - containerPort: 9200
                 resources:
                   requests:
-                    cpu: "1"
-                    memory: "4Gi"
+                    cpu: "10m"
+                    memory: "3Gi"
                   limits:
-                    memory: "4Gi"
+                    memory: "3Gi"
                 env:
                   - name: bootstrap.memory_lock
                     value: 'true'

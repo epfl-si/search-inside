@@ -67,10 +67,10 @@
                   - containerPort: 4444
                 resources:
                   requests:
-                    cpu: "100m"
-                    memory: "128Mi"
+                    cpu: "10m"
+                    memory: "64Mi"
                   limits:
-                    memory: "256Mi"
+                    memory: "64Mi"
                 env:
                   - name: SEARCH_INSIDE_ELASTICSEARCH_URL
                     value: 'http://search-inside-elastic.{{ openshift_namespace }}.svc:9200'
