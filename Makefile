@@ -34,14 +34,10 @@ endif
 scan:
 	@${TRIVY} image --clear-cache
 	@${TRIVY} image --severity HIGH,CRITICAL search-inside_elastic:latest
-	@${TRIVY} image --severity HIGH,CRITICAL search-inside_api:latest
 
 .PHONY: print-env
 print-env: check-env
-	@echo "SEARCH_INSIDE_SESSION_SECRET=${SEARCH_INSIDE_SESSION_SECRET}"
 	@echo "SEARCH_INSIDE_ELASTIC_PASSWORD=${SEARCH_INSIDE_ELASTIC_PASSWORD}"
-	@echo "SEARCH_INSIDE_API_RO_USERNAME=${SEARCH_INSIDE_API_RO_USERNAME}"
-	@echo "SEARCH_INSIDE_API_RO_PASSWORD=${SEARCH_INSIDE_API_RO_PASSWORD}"
 	@echo "SEARCH_INSIDE_KIBANA_PASSWORD=${SEARCH_INSIDE_KIBANA_PASSWORD}"
 	@echo "WP_API_USERNAME=${WP_API_USERNAME}"
 	@echo "WP_API_PASSWORD=${WP_API_PASSWORD}"
@@ -49,16 +45,16 @@ print-env: check-env
 
 .PHONY: build
 build:
-	@docker compose -f docker-compose.elastic-local.yml -f docker-compose.api.yml -f docker-compose.kibana.yml build
+	@docker compose -f docker-compose.elastic-local.yml -f -f docker-compose.kibana.yml build
 
 .PHONY: build-force
 build-force:
-	@docker compose -f docker-compose.elastic-local.yml -f docker-compose.api.yml -f docker-compose.kibana.yml build --force-rm --no-cache --pull
+	@docker compose -f docker-compose.elastic-local.yml -f docker-compose.kibana.yml build --force-rm --no-cache --pull
 
 .PHONY: local-up
 local-up: check-env
-	@docker compose -f docker-compose.elastic-local.yml -f docker-compose.api.yml -f docker-compose.kibana.yml up
+	@docker compose -f docker-compose.elastic-local.yml -f docker-compose.kibana.yml up
 
 .PHONY: prod-up
 prod-up: check-env
-	@docker compose -f docker-compose.elastic-prod.yml -f docker-compose.api.yml -f docker-compose.kibana.yml up
+	@docker compose -f docker-compose.elastic-prod.yml -f docker-compose.kibana.yml up
