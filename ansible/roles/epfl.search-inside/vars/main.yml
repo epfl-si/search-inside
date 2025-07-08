@@ -1,30 +1,12 @@
 
 search_inside_secrets: "{{ lookup('file', '/keybase/team/epfl_searchins/secrets.yml') | from_yaml }}"
 
-search_inside_session_secret: "{{ search_inside_secrets.SEARCH_INSIDE_SESSION_SECRET }}"
 search_inside_elastic_password: "{{ search_inside_secrets.SEARCH_INSIDE_ELASTIC_PASSWORD }}"
 search_inside_kibana_password: "{{ search_inside_secrets.SEARCH_INSIDE_KIBANA_PASSWORD }}"
-search_inside_api_ro_username: "{{ search_inside_secrets.SEARCH_INSIDE_API_RO_USERNAME }}"
-search_inside_api_ro_password: "{{ search_inside_secrets.SEARCH_INSIDE_API_RO_PASSWORD }}"
 
 # WordPress API credentials
 wp_api_username: "{{ search_inside_secrets.WP_API_USERNAME }}"
 wp_api_password: "{{ search_inside_secrets.WP_API_PASSWORD }}"
-
-# Pull Robot API
-_pull_robot_api_builder_secrets: "{{ search_inside_secrets.quay.pull_robot_search_inside_api_builder }}"
-_pull_robot_api_builder_credential: "{{ _pull_robot_api_builder_secrets.name }}:{{ _pull_robot_api_builder_secrets.token }}"
-pull_secret_api_builder_config:
-  auths:
-    "quay-its.epfl.ch":
-      "auth": "{{ _pull_robot_api_builder_credential | b64encode }}"
-
-_pull_robot_api_secrets: "{{ search_inside_secrets.quay.pull_robot_search_inside_api }}"
-_pull_robot_api_credential: "{{ _pull_robot_api_secrets.name }}:{{ _pull_robot_api_secrets.token }}"
-pull_secret_api_config:
-  auths:
-    "quay-its.epfl.ch":
-      "auth": "{{ _pull_robot_api_credential | b64encode }}"
 
 # Pull Robot Elastic
 _pull_robot_elastic_builder_secrets: "{{ search_inside_secrets.quay.pull_robot_search_inside_elastic_builder }}"
