@@ -3,6 +3,8 @@ search_inside_secrets: "{{ lookup('file', '/keybase/team/epfl_searchins/secrets.
 
 search_inside_elastic_password: "{{ search_inside_secrets.SEARCH_INSIDE_ELASTIC_PASSWORD }}"
 search_inside_kibana_password: "{{ search_inside_secrets.SEARCH_INSIDE_KIBANA_PASSWORD }}"
+search_inside_api_ro_username: "{{ search_inside_secrets.SEARCH_INSIDE_API_RO_USERNAME }}"
+search_inside_api_ro_password: "{{ search_inside_secrets.SEARCH_INSIDE_API_RO_PASSWORD }}"
 
 # WordPress API credentials
 wp_api_username: "{{ search_inside_secrets.WP_API_USERNAME }}"
