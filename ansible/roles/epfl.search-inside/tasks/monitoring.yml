@@ -65,19 +65,6 @@
         groups:
           - name: pod-alerts
             rules:
-              - alert: SearchInsideAPIPodCountMismatch
-                expr: >
-                  kube_deployment_status_replicas_available{deployment="search-inside-api", namespace="{{ openshift_namespace }}"}
-                  != kube_deployment_spec_replicas{deployment="search-inside-api", namespace="{{ openshift_namespace }}"}
-                for: 3m
-                labels:
-                  severity: critical
-                  sendto: telegram
-                annotations:
-                  summary: "Pod count mismatch for search-inside-api"
-                  description: >-
-                    "The deployment search-inside-api in the namespace "{{ openshift_namespace }}"
-                    has not the desired number of pods for over 3 minutes."
               - alert: SearchInsideElasticPodCountMismatch
                 expr: >
                   kube_deployment_status_replicas_available{deployment="search-inside-elastic", namespace="{{ openshift_namespace }}"}

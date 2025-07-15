@@ -1,29 +1,3 @@
-- name: API - Image
-  when:
-    - inventory_environment == "test"
-  include_tasks:
-    file: 'api/image.yml'
-    apply:
-      tags:
-        - api
-        - api.image
-  tags:
-    - api
-    - api.image
-    - api.image.startbuild
-
-- name: API - App
-  include_tasks:
-    file: 'api/app.yml'
-    apply:
-      tags:
-        - api
-        - api.app
-  tags:
-    - api
-    - api.app
-    - api.app.restart
-
 - name: Elastic - Image
   include_tasks:
     file: 'elastic/image.yml'

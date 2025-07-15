@@ -51,17 +51,6 @@ Deploy
 ./ansible/elasticsible     # (--prod for deploy in production environment)
 ```
 
-## Search Inside API
-
-Start a new build and restart the pods
-
-```bash
-./ansible/elasticsible -t api.image.startbuild
-./ansible/elasticsible -t api.image.restart     # (--prod for production environment)
-```
-
-## Search Inside Elastic
-
 Start a new build and restart the pods
 
 ```bash
