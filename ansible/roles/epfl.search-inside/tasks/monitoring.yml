@@ -82,11 +82,12 @@
             rules:
               - alert: SearchInsideElasticBuildOlderThan30H
                 expr: >
-                  (time() -
-                    max(
-                      kube_pod_start_time{namespace="{{ openshift_namespace }}", pod=~"search-inside-elastic.*-build"}
-                    )
-                  ) > 108000
+                  (time() - max(
+                    openshift_build_created_timestamp_seconds{
+                      namespace="{{ openshift_namespace }}",
+                      buildconfig="search-inside-elastic"
+                    }
+                  )) > 30 * 3600
                 for: 10m
                 labels:
                   severity: warning
