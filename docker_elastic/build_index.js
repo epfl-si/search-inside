@@ -128,15 +128,51 @@ const setInsideSites = async () => {
 const createInsideIndex = async () => {
   console.log('Creating inside index...');
   await axios.put(`${ELASTIC_HOST}/inside`, {
+    settings: {
+      analysis: {
+        char_filter: {
+          punctuation_normalization: {
+            type: "mapping",
+            mappings: [
+              "’ => '",
+              "´ => '",
+              "` => '",
+              "– => -",
+              "— => -"
+            ]
+          }
+        },
+        analyzer: {
+          multilingual_text: {
+            type: "custom",
+            char_filter: ["punctuation_normalization"],
+            tokenizer: "standard",
+            filter: [
+              "lowercase",
+              "asciifolding"
+            ]
+          }
+        }
+      },
+    },
     mappings: {
       properties: {
         url: { type: 'text' },
-        title: { type: 'text' },
-        description: { type: 'text' },
+        title: {
+          type: 'text',
+          analyzer: 'multilingual_text'
+        },
+        description: {
+          type: 'text',
+          analyzer: 'multilingual_text'
+        },
         rights: { type: 'text' },
         attachment: {
           properties: {
-            content: { type: 'text' }
+            content: {
+              type: 'text',
+              analyzer: 'multilingual_text'
+            }
           }
         }
       }
