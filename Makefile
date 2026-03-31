@@ -47,7 +47,7 @@ print-env: check-env
 
 .PHONY: build
 build:
-	@docker compose -f docker-compose.elastic-local.yml -f -f docker-compose.kibana.yml build
+	@docker compose -f docker-compose.elastic-local.yml -f docker-compose.kibana.yml build
 
 .PHONY: build-force
 build-force:
