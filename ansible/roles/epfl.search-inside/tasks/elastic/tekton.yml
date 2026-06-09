@@ -10,6 +10,12 @@
         steps:
           - name: start-build
             image: "{{ oc_cli_image }}"
+            resources:
+              requests:
+                cpu: "10m"
+                memory: "512Mi"
+              limits:
+                memory: "512Mi"
             script: |
               #!/bin/sh
               oc start-build search-inside-elastic --wait
@@ -27,6 +33,12 @@
         steps:
           - name: deployment-rollout
             image: "{{ oc_cli_image }}"
+            resources:
+              requests:
+                cpu: "10m"
+                memory: "512Mi"
+              limits:
+                memory: "512Mi"
             script: |
               #!/bin/sh
               oc rollout restart deployments search-inside-elastic
