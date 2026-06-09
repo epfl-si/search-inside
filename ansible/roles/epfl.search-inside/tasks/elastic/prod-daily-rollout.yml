@@ -68,7 +68,7 @@
                         oc rollout restart deployments search-inside-elastic
                     resources:
                       requests:
-                        cpu: "100m"
-                        memory: "128Mi"
+                        cpu: "10m"
+                        memory: "256Mi"
                       limits:
                         memory: "256Mi"
