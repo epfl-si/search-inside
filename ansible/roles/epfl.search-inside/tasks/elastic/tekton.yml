@@ -1,7 +1,7 @@
 - name: Elastic/Tekton - Task/Build Elastic
   kubernetes.core.k8s:
     definition:
-      apiVersion: tekton.dev/v1beta1
+      apiVersion: tekton.dev/v1
       kind: Task
       metadata:
         name: build-elastic
@@ -10,7 +10,7 @@
         steps:
           - name: start-build
             image: "{{ oc_cli_image }}"
-            resources:
+            computeResources:
               requests:
                 cpu: "10m"
                 memory: "512Mi"
@@ -24,7 +24,7 @@
 - name: Elastic/Tekton - Task/Restart Elastic
   kubernetes.core.k8s:
     definition:
-      apiVersion: tekton.dev/v1beta1
+      apiVersion: tekton.dev/v1
       kind: Task
       metadata:
         name: restart-elastic
@@ -33,7 +33,7 @@
         steps:
           - name: deployment-rollout
             image: "{{ oc_cli_image }}"
-            resources:
+            computeResources:
               requests:
                 cpu: "10m"
                 memory: "512Mi"
@@ -47,7 +47,7 @@
 - name: Elastic/Tekton - Pipeline
   kubernetes.core.k8s:
     definition:
-      apiVersion: tekton.dev/v1beta1
+      apiVersion: tekton.dev/v1
       kind: Pipeline
       metadata:
         name: build-and-restart-elastic
@@ -103,7 +103,7 @@
                       - -c
                       - |
                         oc apply -f - <<EOF
-                        apiVersion: tekton.dev/v1beta1
+                        apiVersion: tekton.dev/v1
                         kind: PipelineRun
                         metadata:
                           name: run-pipeline-elastic-$(date -u +%Y%m%d-%H%Mz)
@@ -120,7 +120,7 @@
     "elastic.tekton.run-pipeline" in ansible_run_tags
   kubernetes.core.k8s:
     definition:
-      apiVersion: tekton.dev/v1beta1
+      apiVersion: tekton.dev/v1
       kind: PipelineRun
       metadata:
         name: "run-pipeline-elastic-{{ lookup('pipe', 'date -u +%Y%m%d-%H%Mz') }}"
