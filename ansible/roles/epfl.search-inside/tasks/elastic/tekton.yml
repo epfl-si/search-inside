@@ -109,8 +109,9 @@
                           name: run-pipeline-elastic-$(date -u +%Y%m%d-%H%Mz)
                           namespace: "{{ openshift_namespace }}"
                         spec:
-                          timeout: "2h"
+                          taskRunTemplate:
                           serviceAccountName: search-inside-elastic-builder
+                          timeout: "2h"
                           pipelineRef:
                             name: "build-and-restart-elastic"
                         EOF
@@ -132,8 +133,9 @@
         name: "run-pipeline-elastic-{{ lookup('pipe', 'date -u +%Y%m%d-%H%Mz') }}"
         namespace: "{{ openshift_namespace }}"
       spec:
+        taskRunTemplate:
+          serviceAccountName: search-inside-elastic-builder
         timeout: "2h"
-        serviceAccountName: search-inside-elastic-builder
         pipelineRef:
           name: "build-and-restart-elastic"
   tags: elastic.tekton.run-pipeline
