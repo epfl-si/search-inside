@@ -110,7 +110,7 @@
                           namespace: "{{ openshift_namespace }}"
                         spec:
                           taskRunTemplate:
-                          serviceAccountName: search-inside-elastic-builder
+                            serviceAccountName: search-inside-elastic-builder
                           timeout: "2h"
                           pipelineRef:
                             name: "build-and-restart-elastic"
